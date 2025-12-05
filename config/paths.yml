@@ -1,5 +1,8 @@
 config: /config
 data: /data
+   GTSRB: /data/GTSRB
+   Test: /data/GTSRB/Final_Test/Images
+   Training: /data/GTSRB/Final_Training/Images
 reports: /reports
 scripts: /scripts
 src: /src
