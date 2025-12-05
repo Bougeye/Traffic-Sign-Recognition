@@ -1,0 +1,10 @@
+config: /config
+data: /data
+reports: /reports
+scripts: /scripts
+src: /src
+   data: /src/data
+   models: /src/models
+   training: /src/training
+   utils: /src/utils
+tests: /tests
