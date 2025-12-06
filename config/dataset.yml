@@ -1,0 +1,4 @@
+dataset:
+  root_dir: "data/GTSRB/Final_Training/Images"
+  concept_csv: "data/GTSRB/concepts_per_class.csv"
+  image_size: 64
