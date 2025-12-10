@@ -9,7 +9,8 @@ from torch.utils.data import DataLoader
 from src.data.gtsrb_dataset import GTSRBDataset
 
 
-ds = GTSRBDataset("config/dataset.yml")
+ds = GTSRBDataset(dataset_config="config/dataset.yml",
+                  path_config="config/paths.yml")
 loader = DataLoader(ds, batch_size=8, shuffle=True)
 
 for batch in loader:

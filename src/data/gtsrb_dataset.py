@@ -9,14 +9,16 @@ from torchvision import transforms
 
 
 class GTSRBDataset(Dataset):
-    def __init__(self, config_path="config/dataset.yml", transform=None):
-        with open(config_path, "r") as f:
+    def __init__(self, dataset_config="config/dataset.yml", path_config="config/paths.yml",  transform=None):
+        with open(dataset_config, "r") as f:
             cfg = yaml.safe_load(f)
-
         ds_cfg = cfg["dataset"]
+        with open(path_config, "r") as f:
+            cfg = yaml.safe_load(f)
+        pth_cfg = cfg["data"]
 
-        self.root_dir = ds_cfg["root_dir"]
-        self.concept_csv = ds_cfg["concept_csv"]
+        self.root_dir = pth_cfg["training"]
+        self.concept_csv = pth_cfg["concepts"]
 
         if transform is None:
             size = ds_cfg.get("image_size", 64)
