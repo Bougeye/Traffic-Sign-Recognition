@@ -16,4 +16,5 @@ loader = DataLoader(ds, batch_size=8, shuffle=True)
 for batch in loader:
     imgs, (concepts, labels) = batch
     print(imgs.shape, concepts.shape, labels.shape)
+    print(imgs[0], concepts[0], labels[0])
     break

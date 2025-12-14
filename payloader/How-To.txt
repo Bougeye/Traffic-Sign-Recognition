@@ -1,0 +1,3 @@
+- work.slurm must contain an executable script at the end of it
+- that script serves as the starting point for the entire operation
+- Any files written into Payload/Results on the server will be fetched

@@ -4,7 +4,8 @@ data:
    test: "data/GTSRB/Final_Test/Images/"
    training: "data/GTSRB/Final_Training/Images/"
    concepts: "data/GTSRB/concepts_per_class.csv"
-reports: "reports/"
+reports:
+   EDA: "reports/eda/"
 scripts: "scripts/"
 src:
    data: "src/data/"

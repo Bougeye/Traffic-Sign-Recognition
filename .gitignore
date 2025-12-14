@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+payloader/Results/
+payloader/key
+payloader/Payload/
+tests/EfficientNetV2/EfficientNet_v2_m.pth
