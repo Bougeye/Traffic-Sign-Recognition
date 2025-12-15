@@ -1,0 +1,103 @@
+Requirement already satisfied: pip in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.3)
+Requirement already satisfied: wheel in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (0.45.1)
+Requirement already satisfied: setuptools in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (80.9.0)
+Requirement already satisfied: packaging in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.0)
+All required imports already available in venv.
+Import check passed (including torchvision).
+=== ENV ===
+HOSTNAME: gruenau1
+PARTITION: gpu
+CUDA_VISIBLE_DEVICES: 0
+PWD: /vol/fob-vol1/mi23/ziglowsa/Payload
+numpy: 2.2.6
+torch: 2.4.1+cu121 cuda: 12.1 is_available: True
+torchvision: 0.19.1+cu121
+nvidia-smi -L: GPU 0: Tesla V100-PCIE-32GB (UUID: GPU-502de52b-61ca-040e-e44d-5cee4e192a9d)
+Epoch: 0 of 5
+[batch 64] samples: 1024, Training Loss: 0.0567
+   Validation Loss: 2.6816
+   Time since start: 0:00:12.016007
+[batch 128] samples: 2048, Training Loss: 0.0613
+   Validation Loss: 1.1012
+   Time since start: 0:00:47.793428
+[batch 192] samples: 3072, Training Loss: 0.0409
+   Validation Loss: 2.5792
+   Time since start: 0:01:22.645659
+[batch 256] samples: 4096, Training Loss: 0.0432
+   Validation Loss: 2.3376
+   Time since start: 0:01:54.975330
+[batch 320] samples: 5120, Training Loss: 0.0502
+   Validation Loss: 2.0823
+   Time since start: 0:02:27.310693
+[batch 384] samples: 6144, Training Loss: 0.0418
+   Validation Loss: 2.4397
+   Time since start: 0:02:59.127268
+[batch 448] samples: 7168, Training Loss: 0.0457
+   Validation Loss: 1.7238
+   Time since start: 0:03:32.173566
+[batch 512] samples: 8192, Training Loss: 0.0425
+   Validation Loss: 2.4718
+   Time since start: 0:04:04.853746
+[batch 576] samples: 9216, Training Loss: 0.0531
+   Validation Loss: 1.5782
+   Time since start: 0:04:37.084872
+[batch 640] samples: 10240, Training Loss: 0.0491
+   Validation Loss: 2.3197
+   Time since start: 0:05:09.065455
+   Patience decreased - Patience is now 4
+[batch 704] samples: 11264, Training Loss: 0.0537
+   Validation Loss: 1.4362
+   Time since start: 0:05:42.412181
+[batch 768] samples: 12288, Training Loss: 0.0502
+   Validation Loss: 2.4420
+   Time since start: 0:06:16.130914
+   Patience decreased - Patience is now 4
+[batch 832] samples: 13312, Training Loss: 0.0464
+   Validation Loss: 2.6118
+   Time since start: 0:06:49.924155
+   Patience decreased - Patience is now 3
+[batch 896] samples: 14336, Training Loss: 0.0517
+   Validation Loss: 2.1767
+   Time since start: 0:07:22.060272
+   Patience decreased - Patience is now 2
+[batch 960] samples: 15360, Training Loss: 0.0557
+   Validation Loss: 4.6509
+   Time since start: 0:07:55.483765
+   Patience decreased - Patience is now 1
+[batch 1024] samples: 16384, Training Loss: 0.0626
+   Validation Loss: 1.1382
+   Time since start: 0:08:28.039683
+   Patience decreased - Patience is now 0
+--m-Epoch 1 done.
+   Training Loss: 0.0626
+   Validation Loss: 0.9692
+Epoch: 0 of 5
+[batch 64] samples: 1024, Training Loss: 0.0595
+   Validation Loss: 2.6816
+   Time since start: 0:00:09.960737
+[batch 128] samples: 2048, Training Loss: 0.0675
+   Validation Loss: 1.2791
+   Time since start: 0:00:53.127963
+[batch 192] samples: 3072, Training Loss: 0.0456
+   Validation Loss: 2.6922
+   Time since start: 0:01:25.591585
+   Patience decreased - Patience is now 4
+[batch 256] samples: 4096, Training Loss: 0.0449
+   Validation Loss: 2.0908
+   Time since start: 0:01:56.851491
+   Patience decreased - Patience is now 3
+[batch 320] samples: 5120, Training Loss: 0.0519
+   Validation Loss: 2.6389
+   Time since start: 0:02:27.999252
+   Patience decreased - Patience is now 2
+[batch 384] samples: 6144, Training Loss: 0.0432
+   Validation Loss: 3.3885
+   Time since start: 0:02:59.867155
+   Patience decreased - Patience is now 1
+[batch 448] samples: 7168, Training Loss: 0.0541
+   Validation Loss: 2.7157
+   Time since start: 0:03:31.810707
+   Patience decreased - Patience is now 0
+--m-Epoch 1 done.
+   Training Loss: 0.0541
+   Validation Loss: 5.4309
