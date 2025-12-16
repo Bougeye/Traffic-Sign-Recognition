@@ -24,9 +24,7 @@ class GTSRBDataset(Dataset):
             size = ds_cfg.get("image_size", 64)*ds_cfg["zoom_factor"]
             self.transform = transforms.Compose([
                 transforms.Resize((size, size)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485,0.456,0.406],
-                                     std=[0.229,0.224,0.225])
+                transforms.ToTensor()
             ])
         else:
             self.transform = transform

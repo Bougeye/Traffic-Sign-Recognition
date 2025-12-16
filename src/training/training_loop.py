@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision
 from torchvision import transforms, datasets
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split, StratifiedKFold
 import os
 import pandas as pd
 import sys
@@ -17,7 +17,7 @@ if ROOT not in sys.path:
 
 from torch.utils.data import DataLoader, random_split, Subset
 from src.data.gtsrb_dataset import GTSRBDataset
-import src.models.model as models
+import src.models.ENV2 as models
 
 class Training_loop:
     def __init__(self,model_variant="M", early_stopping=True):
@@ -36,12 +36,11 @@ class Training_loop:
 
     def train(self):
         labels = [label for _,label in self.ds.samples]
-
         idx = list(range(len(self.ds)))
 
-        kf = KFold(n_splits=self.tr_config["folds"], shuffle=True, random_state=69)
+        kf = StratifiedKFold(n_splits=self.tr_config["folds"], shuffle=True, random_state=69)
         fold_id = 0
-        for fold, (train_idx, val_idx) in enumerate(kf.split(idx)):
+        for fold, (train_idx, val_idx) in enumerate(kf.split(idx,labels)):
             fold_id+=1
             train_idx = [idx[i] for i in train_idx]
             val_idx = [idx[i] for i in val_idx]
@@ -50,10 +49,10 @@ class Training_loop:
             val_ds = Subset(self.ds, val_idx)
 
             self._train_one(train_ds, val_ds, fold_id)
-            if fold_id == 2:
+            if fold_id == 1:
                 break
         os.makedirs("Results", exist_ok=True)
-        self.output.to_csv("Output.csv",index=False)
+        self.output.to_csv("Results/Output.csv",index=False)
         
     def _train_one(self, train_ds, val_ds, fold_id):
         Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
@@ -109,7 +108,7 @@ class Training_loop:
                             end = time.time()
                             avg_loss = running_loss/total_samples
                             print(f"[batch {i+1}] samples: {total_samples}, Training Loss: {avg_loss:.4f}")
-                            val_loss = self.validate(instance, device, loss_fn, val_ds=val_ds, mode="train")
+                            val_loss = self.validate(instance, device, loss_fn, val_ds, mode="train", target="full")
                             print(f"   Validation Loss: {val_loss:.4f}")
                             print(f"   Time since start: {str(datetime.timedelta(seconds=(end-start)))}")
                             Fold.append(fold_id)
@@ -117,13 +116,6 @@ class Training_loop:
                             Batch.append(i+1)
                             Train_Loss.append(avg_loss)
                             Val_Loss.append(val_loss)
-                            """debugger = int(input("Proceed (0) or check val split (1): "))
-
-                            if debugger == 0:
-                                continue
-                            else:
-                                self.debug_val_outliers(instance, device, loss_fn, val_ds, loss_threshold=val_loss*0.9)
-                                sleep(100)"""
                             if self.progress >= self.tr_config["earliest_stop"] and self.early_stopping == True:
                                 self._check_early_stopping(val_loss)
                             if self.breaker:
@@ -133,14 +125,12 @@ class Training_loop:
                     epoch_loss = running_loss/total_samples
                     print(f"--m-Epoch {epoch+1} done.")
                     print(f"   Training Loss: {epoch_loss:.4f}")
-                    val_loss = self.validate(instance, device, loss_fn, val_ds=val_ds, mode="eval")
+                    val_loss = self.validate(instance, device, loss_fn, val_ds, mode="eval", target="full")
                     print(f"   Validation Loss: {val_loss:.4f}")
         self.output = pd.concat([self.output,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss,"Validation Loss":Val_Loss})])
             
 
-    def validate(self, instance, device, loss_fn, val_ds="Full", mode="eval"):
-        if val_ds == "Full":
-            val_ds = self.ds
+    def validate(self, instance, device, loss_fn, val_ds, mode="eval", target="batch"):
             
         instance.eval()
         if mode == "train":
@@ -148,7 +138,13 @@ class Training_loop:
 
         val_loader = DataLoader(val_ds, shuffle=False, batch_size=self.tr_config["bsize"])
         total_batches = len(val_loader)
-        batch_ids = random.sample(range(total_batches), k=min(self.BPDC, total_batches))
+        
+        batch_ids = None
+        if target == "batch":
+            batch_ids = random.sample(range(total_batches), k=min(self.BPDC, total_batches))
+        if target == "full":
+            batch_ids = range(total_batches)
+        
         total_loss = 0
         total_samples = 0
         with torch.no_grad():

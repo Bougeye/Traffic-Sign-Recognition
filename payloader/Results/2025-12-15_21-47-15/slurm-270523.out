@@ -1,0 +1,28 @@
+Requirement already satisfied: pip in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.3)
+Requirement already satisfied: wheel in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (0.45.1)
+Requirement already satisfied: setuptools in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (80.9.0)
+Requirement already satisfied: packaging in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.0)
+All required imports already available in venv.
+Import check passed (including torchvision).
+=== ENV ===
+HOSTNAME: gruenau1
+PARTITION: gpu
+CUDA_VISIBLE_DEVICES: 0
+PWD: /vol/fob-vol1/mi23/ziglowsa/Payload
+numpy: 2.2.6
+torch: 2.4.1+cu121 cuda: 12.1 is_available: True
+torchvision: 0.19.1+cu121
+nvidia-smi -L: GPU 0: Tesla V100-PCIE-32GB (UUID: GPU-502de52b-61ca-040e-e44d-5cee4e192a9d)
+Epoch: 0 of 1
+[batch 20] samples: 320, Training Loss: 0.1699
+   Validation Loss: 1.1080
+   Time since start: 0:00:03.811471
+[batch 40] samples: 640, Training Loss: 0.0850
+   Validation Loss: 1.7924
+   Time since start: 0:00:58.829473
+[batch 60] samples: 960, Training Loss: 0.0567
+   Validation Loss: 1.9330
+   Time since start: 0:01:41.233909
+--m-Epoch 1 done.
+   Training Loss: 0.0567
+   Validation Loss: 2.1856
