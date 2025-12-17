@@ -1,4 +1,4 @@
-config: "config"
+config: "config/"
 data:
    GTSRB: "data/GTSRB/"
    test: "data/GTSRB/Final_Test/Images/"
@@ -13,3 +13,5 @@ src:
    training: "src/training/"
    utils: "src/utils/"
 tests: "tests/"
+experiments: "experiments/"
+payloader: "payloader/"

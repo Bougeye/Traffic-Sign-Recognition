@@ -64,15 +64,17 @@ class Training_loop:
         instance = model.get_instance()
         optimizer = model.get_optimizer()
         loss_fn = model.get_loss_fn()
-
+        
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
 
+        max_workers = 4+4*(device.type != "cuda")
+
         instance.to(device, memory_format=torch.channels_last)
 
-        train_loader = DataLoader(train_ds, shuffle=True, num_workers=8, persistent_workers=True,
+        train_loader = DataLoader(train_ds, shuffle=True, num_workers=max_workers, persistent_workers=True,
                                   pin_memory = (device.type=="cuda"), batch_size=self.tr_config["bsize"])
-        val_loader = DataLoader(val_ds, shuffle=True, num_workers=8, persistent_workers=True,
+        val_loader = DataLoader(val_ds, shuffle=True, num_workers=max_workers, persistent_workers=False,
                                 pin_memory=(device.type=="cuda"), batch_size=self.tr_config["bsize"])
         start = time.time()
 
@@ -122,7 +124,7 @@ class Training_loop:
         self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})])
 
     def validate(self, instance, device, loss_fn, val_loader, mode="eval", target="batch"):
-        
+        print("VALIDATING")
         instance.eval()
         if mode == "train":
             instance.train()
@@ -157,6 +159,7 @@ class Training_loop:
                 all_targets.append(yb[0].detach().cpu())
         all_preds = np.vstack(all_preds)
         all_targets = np.vstack(all_targets)
+        print("RUNNING CLASSIFICATION REPORT")
         print(self.generate_metrics(all_preds,all_targets))
         return total_loss/total_samples
 
