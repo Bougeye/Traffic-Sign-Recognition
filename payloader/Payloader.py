@@ -39,4 +39,4 @@ def payloader(key_file="key", make_zip=True, remove_zip=True):
     print("### TASK FINISHED ###")
 
 
-payloader(make_zip=True, remove_zip=False)
+payloader(make_zip=False, remove_zip=False)

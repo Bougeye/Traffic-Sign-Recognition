@@ -6,7 +6,7 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=24G
+#SBATCH --mem=36G
 #SBATCH --time=12:00:00
 #SBATCH --output=Results/slurm-%j.out
 #SBATCH --error=Results/slurm-%j.err
@@ -204,4 +204,4 @@ PY
 
 # --- Run your project from the unpacked Payload folder ---
 cd "${HOME}/Payload"
-python src/training/training_loop.py
+python src/training/training_loop_clean.py

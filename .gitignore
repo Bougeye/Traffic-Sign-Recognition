@@ -5,4 +5,5 @@ __pycache__/
 *.pyd
 payloader/key
 payloader/Payload/
+payloader/Payload.zip
 tests/EfficientNetV2/EfficientNet_v2_m.pth

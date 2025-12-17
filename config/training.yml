@@ -1,7 +1,7 @@
 epochs: 5
-lr: 0.001
-bsize: 64               #batchsize
+lr: 0.01
+bsize: 16               #batchsize
 optimizer: "adam"
 folds: 5
 earliest_stop: 0.04      #ratio of training process at which early stopping is enabled
-bpdc: 1                #batches per data collection to collect metrics throughout an epoch
+bpdc: 20                #batches per data collection to collect metrics throughout an epoch

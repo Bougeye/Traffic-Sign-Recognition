@@ -3,7 +3,6 @@ import torch.nn as nn
 import torchvision
 from torchvision import transforms, datasets
 from sklearn.model_selection import train_test_split, StratifiedKFold
-import sklearn.metrics as metrics
 import os
 import pandas as pd
 import sys
@@ -11,7 +10,6 @@ import yaml
 import time, datetime
 import random
 import math
-import numpy as np
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if ROOT not in sys.path:
@@ -30,7 +28,7 @@ class Training_loop:
         self.model_variant = model_variant
         self.ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                path_config="config/paths.yml")
-        self.output_batches, self.output_epochs = pd.DataFrame({}), pd.DataFrame({})
+        self.output = pd.DataFrame({})
         self.BPDC = self.tr_config["bpdc"]
         self.total_batches = self.ds_config["dataset"]["training_samples"]//self.tr_config["bsize"]
         self.progress = 0.0
@@ -54,8 +52,7 @@ class Training_loop:
             if fold_id == 1:
                 break
         os.makedirs("Results", exist_ok=True)
-        self.output_batches.to_csv("Results/Output_batches.csv",index=False)
-        self.output_epochs.to_csv("Results/Output_epochs.csv",index=False)
+        self.output.to_csv("Results/Output.csv",index=False)
         
     def _train_one(self, train_ds, val_ds, fold_id):
         Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
@@ -70,14 +67,11 @@ class Training_loop:
 
         instance.to(device, memory_format=torch.channels_last)
 
-        train_loader = DataLoader(train_ds, shuffle=True, num_workers=8, persistent_workers=True,
+        train_loader = DataLoader(train_ds, shuffle=False, num_workers=8, persistent_workers=True,
                                   pin_memory = (device.type=="cuda"), batch_size=self.tr_config["bsize"])
-        val_loader = DataLoader(val_ds, shuffle=True, num_workers=8, persistent_workers=True,
+        val_loader = DataLoader(val_ds, shuffle=False, num_workers=8, persistent_workers=True,
                                 pin_memory=(device.type=="cuda"), batch_size=self.tr_config["bsize"])
         start = time.time()
-
-        print("device:",device)
-        
         for epoch in range(self.tr_config["epochs"]):
                 if True:
                     instance.train()
@@ -86,46 +80,22 @@ class Training_loop:
                     total_samples = 0
                     running_loss = 0
                     for i, (xb,yb) in enumerate(train_loader):
-                        xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
-                        yb[0] = yb[0].to(device, non_blocking=True)
-                        optimizer.zero_grad(set_to_none=True)
-                        
-                        with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
-                            logits = instance(xb)
-                            loss = loss_fn(logits,yb[0])
-                            
-                        scaler.scale(loss).backward()
-                        #torch.nn.utils.clip_grad_norm_(instance.parameters(), 1.0)
-                        scaler.step(optimizer)
-                        scaler.update()
-
-                        total_samples+=self.tr_config["bsize"]
-                        running_loss += loss.item()*self.tr_config["bsize"]
-                        
-                        if (i+1)%self.BPDC == 0:
-                            end = time.time()
-                            train_loss = loss.item()
-                            print(f"[batch {i+1}] samples: {total_samples}, Training Loss: {train_loss:.4f}")
-                            print(f"   Time since start: {str(datetime.timedelta(seconds=(end-start)))}")
-                            Fold.append(fold_id)
-                            Epoch.append(epoch)
-                            Batch.append(i+1)
-                            Train_Loss.append(train_loss)
-                        self.progress += 1/(self.total_batches*self.tr_config["epochs"])
-                            
+                        print("Worked")
                     epoch_loss = running_loss/total_samples
                     print(f"--m-Epoch {epoch+1} done.")
                     print(f"   Training Loss: {epoch_loss:.4f}")
-                    val_loss = self.validate(instance, device, loss_fn, val_loader, mode="eval", target="full")
+                    val_loss = self.validate(instance, device, loss_fn, val_ds, mode="eval", target="full")
                     print(f"   Validation Loss: {val_loss:.4f}")
-                    self.output_epochs = pd.concat([self.output_epochs,pd.DataFrame({"Fold":[fold_id],"Epoch":[epoch],"Training Loss":[epoch_loss],"Validation Loss":[val_loss]})])
-        self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})])
+        self.output = pd.concat([self.output,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss,"Validation Loss":Val_Loss})])
+            
 
-    def validate(self, instance, device, loss_fn, val_loader, mode="eval", target="batch"):
+    def validate(self, instance, device, loss_fn, val_ds, mode="eval", target="batch"):
         
+
         instance.eval()
         if mode == "train":
             instance.train()
+
 
         total_batches = len(val_loader)
         
@@ -137,8 +107,6 @@ class Training_loop:
         
         total_loss = 0
         total_samples = 0
-
-        all_preds, all_targets = [],[]
         with torch.no_grad():
             for i, (xb, yb) in enumerate(val_loader):
                 if i not in batch_ids:
@@ -153,16 +121,10 @@ class Training_loop:
                     
                 total_samples+=self.tr_config["bsize"]
                 total_loss+=loss.item()*self.tr_config["bsize"]
-                all_preds.append((logits.detach().cpu() >= 0).numpy().astype(float))
-                all_targets.append(yb[0].detach().cpu())
-        all_preds = np.vstack(all_preds)
-        all_targets = np.vstack(all_targets)
-        print(self.generate_metrics(all_preds,all_targets))
+                
         return total_loss/total_samples
 
-    def generate_metrics(self,preds,targets):
-        report = metrics.classification_report(targets,preds)
-        return report
+
         
     def get_model(self):
         return self.model
