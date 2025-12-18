@@ -30,13 +30,14 @@ class Training_loop:
         self.model_variant = model_variant
         self.ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                path_config="config/paths.yml")
-        self.output_batches, self.output_epochs = pd.DataFrame({}), pd.DataFrame({})
+        self.output_batches, self.output_epochs = pd.DataFrame({}),pd.DataFrame({})
+        self.output_report, self.output_accuracy = pd.DataFrame({}),pd.DataFrame({}) 
         self.BPDC = self.tr_config["bpdc"]
         self.total_batches = self.ds_config["dataset"]["training_samples"]//self.tr_config["bsize"]
         self.progress = 0.0
         self.early_stopping = early_stopping
 
-    def train(self):
+    def train(self, out_folder=""):
         labels = [label for _,label in self.ds.samples]
         idx = list(range(len(self.ds)))
 
@@ -53,9 +54,12 @@ class Training_loop:
             self._train_one(train_ds, val_ds, fold_id)
             if fold_id == 1:
                 break
-        os.makedirs("Results", exist_ok=True)
-        self.output_batches.to_csv("Results/Output_batches.csv",index=False)
-        self.output_epochs.to_csv("Results/Output_epochs.csv",index=False)
+        target_folder = os.path.join("Results",out_folder)
+        os.makedirs(target_folder, exist_ok=True)
+        self.output_batches.to_csv(f"{target_folder}/Output_batches.csv",index=False)
+        self.output_epochs.to_csv(f"{target_folder}/Output_epochs.csv",index=False)
+        self.output_report.to_csv(f"{target_folder}/Output_report.csv",index=False)
+        self.output_accuracy.to_csv(f"{target_folder}/Output_accuracy.csv",index=False)
         
     def _train_one(self, train_ds, val_ds, fold_id):
         Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
@@ -78,9 +82,15 @@ class Training_loop:
                                 pin_memory=(device.type=="cuda"), batch_size=self.tr_config["bsize"])
         start = time.time()
 
+        #early_stopping parameters:
+        val_loss = np.inf
+        best_val_loss = np.inf
+        patience = 5
+        min_delta = 0.05
+
         print("device:",device)
         
-        for epoch in range(self.tr_config["epochs"]):
+        for epoch in range(1,self.tr_config["epochs"]+1):
                 if True:
                     instance.train()
                     print(f"Epoch: {epoch} of {self.tr_config['epochs']}")
@@ -114,17 +124,31 @@ class Training_loop:
                             Batch.append(i+1)
                             Train_Loss.append(train_loss)
                         self.progress += 1/(self.total_batches*self.tr_config["epochs"])
-                            
+                             
                     epoch_loss = running_loss/total_samples
-                    print(f"--m-Epoch {epoch+1} done.")
+                    print(f"--m-Epoch {epoch} done.")
                     print(f"   Training Loss: {epoch_loss:.4f}")
-                    val_loss = self.validate(instance, device, loss_fn, val_loader, mode="eval", target="full")
+                    val_loss = self.validate(epoch, instance, device, loss_fn, val_loader, mode="eval", target="full")
                     print(f"   Validation Loss: {val_loss:.4f}")
                     self.output_epochs = pd.concat([self.output_epochs,pd.DataFrame({"Fold":[fold_id],"Epoch":[epoch],"Training Loss":[epoch_loss],"Validation Loss":[val_loss]})])
+
+                    #check early stopping:
+                    stop = self.check_early_stopping(val_loss, best_val_loss, min_delta)
+                    if stop:
+                        patience -= 1
+                        print(f"Patience decreased: Patience is now  {patience}")
+                    else:
+                        patience = min(patience+1, 5)
+                        best_val_loss = val_loss
+                    if patience == 0:
+                        print("Stopping early")
+                        break
+
         self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})])
 
-    def validate(self, instance, device, loss_fn, val_loader, mode="eval", target="batch"):
-        print("VALIDATING")
+
+
+    def validate(self, epoch, instance, device, loss_fn, val_loader, mode="eval", target="batch"):
         instance.eval()
         if mode == "train":
             instance.train()
@@ -159,13 +183,25 @@ class Training_loop:
                 all_targets.append(yb[0].detach().cpu())
         all_preds = np.vstack(all_preds)
         all_targets = np.vstack(all_targets)
-        print("RUNNING CLASSIFICATION REPORT")
-        print(self.generate_metrics(all_preds,all_targets))
+
+        metric_map = self.generate_metrics(all_preds, all_targets, epoch)
+        self.output_report = pd.concat([self.output_report,metric_map["report"]])
+        self.output_accuracy = pd.concat([self.output_accuracy,metric_map["accuracy"]])
+        print(self.output_report)
+        print(self.output_accuracy)
         return total_loss/total_samples
 
-    def generate_metrics(self,preds,targets):
-        report = metrics.classification_report(targets,preds)
-        return report
+    def check_early_stopping(self, val_loss, best_val_loss, min_delta):
+        return val_loss > (1-min_delta)*best_val_loss
+
+    def generate_metrics(self,preds,targets,epoch):
+        metric_map = {}
+        report = pd.DataFrame(metrics.classification_report(targets,preds,output_dict=True)).transpose()
+        report.loc[:,"epoch"] = epoch
+        metric_map["report"] = report
+        accuracy = metrics.accuracy_score(targets,preds,normalize=True)
+        metric_map["accuracy"] = pd.DataFrame({"epoch":[epoch],"accuracy":[accuracy]})
+        return metric_map
         
     def get_model(self):
         return self.model
