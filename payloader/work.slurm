@@ -48,6 +48,7 @@ python -m pip install -U pip wheel setuptools packaging --no-cache-dir
 #   yaml -> PyYAML
 #   sklearn.model_selection -> scikit-learn
 #   pandas -> pandas
+#   seaborn -> seaborn
 
 MISSING_IMPORTS="$(python - <<'PY'
 import importlib
@@ -59,6 +60,7 @@ required = [
     "yaml",
     "pandas",
     "sklearn.model_selection",
+    "seaborn",
 ]
 
 missing = []
@@ -81,6 +83,7 @@ if [ -n "${MISSING_IMPORTS}" ]; then
       yaml) PIP_PKGS+=("PyYAML") ;;
       pandas) PIP_PKGS+=("pandas") ;;
       sklearn.model_selection) PIP_PKGS+=("scikit-learn") ;;
+      seaborn) PIP_PKGS+=("seaborn") ;;
       # stdlib should never be installed
       sys|time|datetime) ;;
       *) echo "Warning: no pip mapping for '${m}'" >&2 ;;
@@ -156,6 +159,7 @@ required = [
     "sklearn.model_selection",
     "torch",
     "torchvision",
+    "seaborn",
 ]
 
 missing = []
@@ -204,4 +208,4 @@ PY
 
 # --- Run your project from the unpacked Payload folder ---
 cd "${HOME}/Payload"
-python src/training/training_loop_clean.py
+python scripts/train.py

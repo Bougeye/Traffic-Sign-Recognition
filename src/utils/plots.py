@@ -13,52 +13,34 @@ def epoch_loss(df,out_folder):
     df_fin = pd.concat([df_train, df_val])
     g = sns.lineplot(x="Epoch",y="Loss",
                      hue="Mode", data=df_fin)
+    os.makedirs(out_folder, exist_ok=True)
     fig = g.figure
-    fig.savefig(os.path.join(out_folder,"epoch_plot.png"))
+    fig.savefig(os.path.join(out_folder,"epoch_loss.png"))
     plt.close(g.figure)
 
 def batch_loss(df_b,bpdc,total_samples,out_folder):
     df_b["Batch_total"] = df_b["Epoch"]*(total_samples//bpdc)+df_b["Batch"]
     g = sns.lineplot(x="Batch_total", y="Training Loss", data = df_b)
+    os.makedirs(out_folder, exist_ok=True)
     fig = g.figure
-    fig.savefig(os.path.join(out_folder,"batch_plot.png"))
+    fig.savefig(os.path.join(out_folder,"batch_loss.png"))
     plt.close(g.figure)
 
-def total_accuracy(preds,targets):
-    total = len(preds)
-    correct = 0
-    for i in range(total):
-        correct += preds[i] == targets[i]
-        if preds[i] == targets[i]:
-            correct+=1
-    return round(correct/total, 4)
+def epoch_accuracy(df,out_folder):
+    g = sns.lineplot(x="epoch",y="accuracy",data=df)
+    os.makedirs(out_folder, exist_ok=True)
+    fig = g.figure
+    fig.savefig(os.path.join(out_folder,"epoch_accuracy.png"))
+    plt.close(g.figure)
 
-def working_accuracy_per_class(preds,targets):
-    accs = {}
-    total = len(preds)
-    for i in range(total):
-        if str(targets[i]) not in accs:
-            accs[str(targets[i])] = preds[i] == targets[i]
-        else:
-            accs[str(targets[i])] += preds[i] == targets[i]
-    for e in accs:
-        accs[e] = round(accs[e]/total,4)
-    return accs
+def report(df,out_folder):
+    df["class"] = df.groupby("epoch").cumcount()%43
+    print(df)
+    os.makedirs(out_folder, exist_ok=True)
+    for e in ["precision","recall","f1-score"]:
+        g = sns.lineplot(x="epoch",y=e,
+                         hue="class",data=df)
+        fig = g.figure
+        fig.savefig(os.path.join(out_folder,f"epoch_{e}.png"))
+        plt.close(g.figure)
 
-def right_accuracy_per_class(preds,targets,labelmap):
-    accs = {}
-    total = len(preds)
-    for i in range(total):
-        label = labelmap[str(targets[i])]
-        if label not in accs:
-            accs[label] = preds[i] == targets[i]
-        else:
-            accs[label] += preds[i] == targets[i]
-    for e in accs:
-        accs[e] = round(accs[e]/total,4)
-    return accs
-
-epoch_data = pd.read_csv("Output_epochs.csv")
-batch_data = pd.read_csv("Output_batches.csv")
-epoch_loss(epoch_data,".")
-batch_loss(batch_data,20,39209,".")

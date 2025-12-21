@@ -6,13 +6,16 @@ import os
 import sys
 import yaml
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(ROOT)
+
+from torch.utils.data import DataLoader
+from src.data.gtsrb_dataset import GTSRBDataset
 
 class ENV2:
-    def __init__(self,model_variant="M", lr=0.01, optimizer="adam"):
+    def __init__(self,model_variant="M"):
         """
         Req: A model variant is given as a string being either 'S','M' or 'L'.
-             A learning rate and an optimizer are given as float and string.
-             Accepted optimizers are 'adam', 'sgd', 'adagrad', 'adadelta'.
         Eff: A modified EfficientNetV2 is created, hyper-parameters are loaded
              through yml or set by the class.
         Res: -
@@ -28,15 +31,17 @@ class ENV2:
         self.loss_fn = None
         self.optimizer = None
         
+        with open("config/training.yml", "r") as f:
+            self.config = yaml.safe_load(f)
         self.switch_variant(model_variant)
         self.set_loss_fn()
         
         self.optimizer_map = {
-            "adam": torch.optim.Adam(self.model.parameters(), lr),
-            "sgd": torch.optim.SGD(self.model.parameters(), lr),
-            "adagrad": torch.optim.Adagrad(self.model.parameters(), lr),
-            "adadelta": torch.optim.Adadelta(self.model.parameters(), lr)}
-        self.set_optimizer(optimizer)
+            "adam": torch.optim.Adam(self.model.parameters(), self.config["lr"]),
+            "sgd": torch.optim.SGD(self.model.parameters(), self.config["lr"]),
+            "adagrad": torch.optim.Adagrad(self.model.parameters(), self.config["lr"]),
+            "adadelta": torch.optim.Adadelta(self.model.parameters(), self.config["lr"])}
+        self.set_optimizer(self.config["optimizer"])
         
     def switch_variant(self,model_variant="M"):
         """

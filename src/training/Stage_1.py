@@ -19,21 +19,28 @@ if ROOT not in sys.path:
 
 from torch.utils.data import DataLoader, random_split, Subset
 from src.data.gtsrb_dataset import GTSRBDataset
+import src.utils.plots as plots
 import src.models.ENV2 as models
 
 class Training_loop:
-    def __init__(self,model_variant="M", early_stopping=True):
-        with open("config/training.yml","r") as f:
-            self.tr_config = yaml.safe_load(f)
+    def __init__(self, model_variant="M", epochs=15, lr=0.01, bsize=16, optimizer="adam", folds=5, bpdc=20, early_stopping=True):
         with open("config/dataset.yml", "r") as f:
             self.ds_config = yaml.safe_load(f)
         self.model_variant = model_variant
         self.ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                path_config="config/paths.yml")
         self.output_batches, self.output_epochs = pd.DataFrame({}),pd.DataFrame({})
-        self.output_report, self.output_accuracy = pd.DataFrame({}),pd.DataFrame({}) 
-        self.BPDC = self.tr_config["bpdc"]
-        self.total_batches = self.ds_config["dataset"]["training_samples"]//self.tr_config["bsize"]
+        self.output_report, self.output_accuracy = pd.DataFrame({}),pd.DataFrame({})
+
+        self.epochs = epochs
+        self.lr = lr
+        self.bsize = 16
+        self.optimizer = optimizer
+        self.folds = folds
+        self.bpdc = bpdc
+
+        self.training_samples = self.ds_config["dataset"]["training_samples"]
+        self.total_batches = self.training_samples//self.bsize
         self.progress = 0.0
         self.early_stopping = early_stopping
 
@@ -41,7 +48,7 @@ class Training_loop:
         labels = [label for _,label in self.ds.samples]
         idx = list(range(len(self.ds)))
 
-        kf = StratifiedKFold(n_splits=self.tr_config["folds"], shuffle=True, random_state=69)
+        kf = StratifiedKFold(n_splits=self.folds, shuffle=True, random_state=69)
         fold_id = 0
         for fold, (train_idx, val_idx) in enumerate(kf.split(idx,labels)):
             fold_id+=1
@@ -56,15 +63,25 @@ class Training_loop:
                 break
         target_folder = os.path.join("Results",out_folder)
         os.makedirs(target_folder, exist_ok=True)
+        
         self.output_batches.to_csv(f"{target_folder}/Output_batches.csv",index=False)
         self.output_epochs.to_csv(f"{target_folder}/Output_epochs.csv",index=False)
         self.output_report.to_csv(f"{target_folder}/Output_report.csv",index=False)
         self.output_accuracy.to_csv(f"{target_folder}/Output_accuracy.csv",index=False)
+
+        plots.epoch_loss(pd.read_csv(f"{target_folder}/Output_epochs.csv"),f"{target_folder}/Plots")
+        plots.batch_loss(pd.read_csv(f"{target_folder}/Output_batches.csv"),self.bpdc, self.training_samples,f"{target_folder}/Plots")
+        plots.report(pd.read_csv(f"{target_folder}/Output_report.csv"),f"{target_folder}/Plots")
+        plots.epoch_accuracy(pd.read_csv(f"{target_folder}/Output_accuracy.csv"),f"{target_folder}/Plots")
+
+        output_dict = {"output_batches":self.output_batches,"output_epochs":self.output_epochs,
+                       "output_report":self.output_report,"output_accuracy":self.output_accuracy}
+        return output_dict
         
     def _train_one(self, train_ds, val_ds, fold_id):
         Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
         
-        model = models.ENV2(self.model_variant)
+        model = models.ENV2(self.model_variant, self.lr, self.optimizer)
         instance = model.get_instance()
         optimizer = model.get_optimizer()
         loss_fn = model.get_loss_fn()
@@ -77,9 +94,9 @@ class Training_loop:
         instance.to(device, memory_format=torch.channels_last)
 
         train_loader = DataLoader(train_ds, shuffle=True, num_workers=max_workers, persistent_workers=True,
-                                  pin_memory = (device.type=="cuda"), batch_size=self.tr_config["bsize"])
+                                  pin_memory = (device.type=="cuda"), batch_size=self.bsize)
         val_loader = DataLoader(val_ds, shuffle=True, num_workers=max_workers, persistent_workers=False,
-                                pin_memory=(device.type=="cuda"), batch_size=self.tr_config["bsize"])
+                                pin_memory=(device.type=="cuda"), batch_size=self.bsize)
         start = time.time()
 
         #early_stopping parameters:
@@ -90,10 +107,10 @@ class Training_loop:
 
         print("device:",device)
         
-        for epoch in range(1,self.tr_config["epochs"]+1):
+        for epoch in range(1,self.epochs+1):
                 if True:
                     instance.train()
-                    print(f"Epoch: {epoch} of {self.tr_config['epochs']}")
+                    print(f"Epoch: {epoch} of {self.epochs}")
                     
                     total_samples = 0
                     running_loss = 0
@@ -111,10 +128,10 @@ class Training_loop:
                         scaler.step(optimizer)
                         scaler.update()
 
-                        total_samples+=self.tr_config["bsize"]
-                        running_loss += loss.item()*self.tr_config["bsize"]
-                        
-                        if (i+1)%self.BPDC == 0:
+                        total_samples+=self.bsize
+                        running_loss += loss.item()*self.bsize
+
+                        if (i+1)%self.bpdc == 0:
                             end = time.time()
                             train_loss = loss.item()
                             print(f"[batch {i+1}] samples: {total_samples}, Training Loss: {train_loss:.4f}")
@@ -123,14 +140,14 @@ class Training_loop:
                             Epoch.append(epoch)
                             Batch.append(i+1)
                             Train_Loss.append(train_loss)
-                        self.progress += 1/(self.total_batches*self.tr_config["epochs"])
+                        self.progress += 1/(self.total_batches*self.epochs)
                              
                     epoch_loss = running_loss/total_samples
                     print(f"--m-Epoch {epoch} done.")
                     print(f"   Training Loss: {epoch_loss:.4f}")
                     val_loss = self.validate(epoch, instance, device, loss_fn, val_loader, mode="eval", target="full")
                     print(f"   Validation Loss: {val_loss:.4f}")
-                    self.output_epochs = pd.concat([self.output_epochs,pd.DataFrame({"Fold":[fold_id],"Epoch":[epoch],"Training Loss":[epoch_loss],"Validation Loss":[val_loss]})])
+                    self.output_epochs = pd.concat([self.output_epochs,pd.DataFrame({"Fold":[fold_id],"Epoch":[epoch],"Training Loss":[epoch_loss],"Validation Loss":[val_loss]})], ignore_index=True)
 
                     #check early stopping:
                     stop = self.check_early_stopping(val_loss, best_val_loss, min_delta)
@@ -140,11 +157,11 @@ class Training_loop:
                     else:
                         patience = min(patience+1, 5)
                         best_val_loss = val_loss
-                    if patience == 0:
+                    if patience == 0 or np.isnan(train_loss) or np.isnan(val_loss):
                         print("Stopping early")
                         break
 
-        self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})])
+        self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})], ignore_index=True)
 
 
 
@@ -157,7 +174,7 @@ class Training_loop:
         
         batch_ids = None
         if target == "batch":
-            batch_ids = random.sample(range(total_batches), k=min(self.BPDC, total_batches))
+            batch_ids = random.sample(range(total_batches), k=min(self.bpdc, total_batches))
         if target == "full":
             batch_ids = range(total_batches)
         
@@ -177,18 +194,17 @@ class Training_loop:
                     logits = instance(xb)
                     loss = loss_fn(logits,yb[0])
                     
-                total_samples+=self.tr_config["bsize"]
-                total_loss+=loss.item()*self.tr_config["bsize"]
+                total_samples+=self.bsize
+                total_loss+=loss.item()*self.bsize
                 all_preds.append((logits.detach().cpu() >= 0).numpy().astype(float))
                 all_targets.append(yb[0].detach().cpu())
         all_preds = np.vstack(all_preds)
         all_targets = np.vstack(all_targets)
 
         metric_map = self.generate_metrics(all_preds, all_targets, epoch)
-        self.output_report = pd.concat([self.output_report,metric_map["report"]])
-        self.output_accuracy = pd.concat([self.output_accuracy,metric_map["accuracy"]])
-        print(self.output_report)
-        print(self.output_accuracy)
+        self.output_report = pd.concat([self.output_report,metric_map["report"]], ignore_index=True)
+        self.output_accuracy = pd.concat([self.output_accuracy,metric_map["accuracy"]], ignore_index=True)
+        
         return total_loss/total_samples
 
     def check_early_stopping(self, val_loss, best_val_loss, min_delta):
