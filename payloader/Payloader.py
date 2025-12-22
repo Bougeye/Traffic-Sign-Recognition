@@ -24,11 +24,13 @@ def payloader(key_file="key", make_zip=True, remove_zip=True):
     experiment = input("Enter experiment (optional): ")
     if experiment == "":
         experiment = "Unlabeled"
-    c
     out="Results.csv"
     shutil.copy(os.path.join(loader_path,"work.slurm"),os.path.join(load_path,"work.slurm"))
     if make_zip:
-        os.remove(os.path.join(loader_path,"Payload.zip"))
+        try:
+            os.remove(os.path.join(loader_path,"Payload.zip"))
+        except:
+            pass
         shutil.make_archive(load_path, "zip", load_path)
         print("--- Built Payload zip-file")
     c = Connection(host=server,
@@ -99,4 +101,4 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     print("--- Copied results to experiments")
     print("### TASK FINISHED ###")
     
-get_results(make_zip=False, remove_zip=False)
+payloader(make_zip=True, remove_zip=False)

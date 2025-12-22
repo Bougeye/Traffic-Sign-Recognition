@@ -19,7 +19,7 @@ if ROOT not in sys.path:
 
 from torch.utils.data import DataLoader, random_split, Subset
 import src.utils.plots as plots
-import src.models.LabelModels as models
+import src.models.LabelModel as models
 
 class Training_loop:
     def __init__(self, epochs=15, lr=0.01, bsize=16, optimizer="adam", folds=5, bpdc=20, early_stopping=True):
@@ -39,7 +39,7 @@ class Training_loop:
         self.progress = 0.0
         self.early_stopping = early_stopping
 
-    def train(self, dataset):
+    def train(self, dataset, out_folder=""):
         self.ds = dataset
         labels = [label for _,label in self.ds.samples]
         idx = list(range(len(self.ds)))

@@ -11,7 +11,9 @@ if ROOT not in sys.path:
 from torch.utils.data import TensorDataset, DataLoader
 from src.data.gtsrb_dataset import GTSRBDataset
 
-import src.training.Stage_1 as Stage_1
+from src.training.Training_Loop import Training_Loop
+import src.models.ENV2 as stage_1_models
+import src.models.LabelModel as stage_2_models
 
 class train:
     def __init__(self, model_variant="M", early_stopping=True):
@@ -19,21 +21,33 @@ class train:
             self.tr_cfg = yaml.safe_load(f)
         with open("config/dataset.yml", "r") as f:
             self.ds_cfg = yaml.safe_load(f)
-        self.Stage1 = Stage_1.Training_loop(model_variant=model_variant, epochs=self.tr_cfg["epochs"],
-                                       lr=self.tr_cfg["lr"], bsize=self.tr_cfg["bsize"], optimizer=self.tr_cfg["optimizer"],
-                                       folds=self.tr_cfg["folds"], bpdc=self.tr_cfg["bpdc"], early_stopping=early_stopping)
+        self.model_stage_1 = stage_1_models.ENV2(model_variant,self.tr_cfg["lr"], self.tr_cfg["optimizer"])
+        self.model_stage_2 = stage_2_models.LabelModel(3,128,64)
+        self.early_stopping = early_stopping
+
+    def train(self):
+        self.train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
+                                              bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
+                                              min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping)
+        self.train_2 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
+                                              bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
+                                              min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping)
         
-    def Train_Stage_1(self):
-        self.Stage1.train()
+        self.train_1.set_model(self.model_stage_1)
+        self.train_2.set_model(self.model_stage_2)
+        
+        dataset_1 = GTSRBDataset(dataset_config="config/dataset.yml",
+                                 path_config="config/paths.yml")
+        self.train_1.train(dataset_1, out_folder="Stage_1")
+        
+        dataset_2 = self.forward_stage_1()
+        self.train_2.train(dataset_2, out_folder="Stage_2")
 
-    #def Train_Stage_2(self):
-        #self.Stage2.train(ds=Forward_Stage_1())
-
-    def Forward_Stage_1(self):
+    def forward_stage_1(self):
         X_in, y_in = [],[]
-        instance = self.Stage1.get_model().get_instance()
+        instance = self.model_stage_1.get_instance()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-        loss_fn = self.Stage1.get_model().get_loss_fn()
+        loss_fn = self.model_stage_1.get_loss_fn()
         
         gtsrb_ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                 path_config="config/paths.yml")
@@ -67,16 +81,18 @@ class train:
         for i,(xb,yb) in enumerate(loader):
             print(xb,yb)
 
-    def Experiment_Training(self, model_variant="M", early_stopping=True):
+    def experiment_training(self, model_variant="M", early_stopping=True):
         ###Learning rate optimization
+        gtsrb_ds = GTSRBDataset(dataset_config="config/dataset.yml",
+                                path_config="config/paths.yml")
         for learning_rate in [0.01,0.001,0.0001,0.00001]:
-            Stage1 = Stage_1.Training_loop(model_variant=model_variant, epochs=self.tr_cfg["epochs"],
-                                           lr=learning_rate, bsize=self.tr_cfg["bsize"], optimizer=self.tr_cfg["optimizer"],
-                                           folds=self.tr_cfg["folds"], bpdc=self.tr_cfg["bpdc"], early_stopping=early_stopping)
-            Stage1.train(out_folder=f"lr-{learning_rate}")
+            model_stage_1 = stage_1_models.ENV2(model_variant,learning_rate, self.tr_cfg["optimizer"])
+            train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
+                                                bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
+                                                min_delta=self.tr_cfg["min_delta"],early_stopping=early_stopping)
+            train_1.set_model(model_stage_1)
+            train_1.train(dataset=gtsrb_ds, out_folder=f"lr-{learning_rate}")
 
 if __name__ == "__main__":
     x = train(model_variant="S", early_stopping=True)
-    x.Train_Stage_1()
-    ds = x.Forward_Stage_1()
-    x.Train_Stage_2(ds)
+    x.train()

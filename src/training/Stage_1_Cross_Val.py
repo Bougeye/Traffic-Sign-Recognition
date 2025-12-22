@@ -44,6 +44,8 @@ class Training_loop:
         self.progress = 0.0
         self.early_stopping = early_stopping
 
+        self.model = models.ENV2(self.model_variant, self.lr, self.optimizer)
+
     def train(self, out_folder=""):
         labels = [label for _,label in self.ds.samples]
         idx = list(range(len(self.ds)))
@@ -81,10 +83,9 @@ class Training_loop:
     def _train_one(self, train_ds, val_ds, fold_id):
         Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
         
-        self.model = models.ENV2(self.model_variant, self.lr, self.optimizer)
-        instance = model.get_instance()
-        optimizer = model.get_optimizer()
-        loss_fn = model.get_loss_fn()
+        instance = self.model.get_instance()
+        optimizer = self.model.get_optimizer()
+        loss_fn = self.model.get_loss_fn()
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
