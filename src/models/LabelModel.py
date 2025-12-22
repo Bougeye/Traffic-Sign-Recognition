@@ -12,58 +12,60 @@ sys.path.append(ROOT)
 
 from torch.utils.data import DataLoader
 
-class LabelModel(nn.Module):
-    def __init__(self, layers=1, hidden_dim=0, hidden_dim2=0):
-        super().__init__()
+class LabelModel():
+    def __init__(self, lr=0.01, optimizer="adam", layers=1, hidden_dim=0, hidden_dim2=0):
         
         self.countLayers = layers
 
         self.optimizer_map = {
-            "adam": torch.optim.Adam(self.model.parameters(), self.config["lr"]),
-            "sgd": torch.optim.SGD(self.model.parameters(), self.config["lr"]),
-            "adagrad": torch.optim.Adagrad(self.model.parameters(), self.config["lr"]),
-            "adadelta": torch.optim.Adadelta(self.model.parameters(), self.config["lr"])
+            "adam": torch.optim.Adam(self.model.parameters(), lr),
+            "sgd": torch.optim.SGD(self.model.parameters(), lr),
+            "adagrad": torch.optim.Adagrad(self.model.parameters(), lr),
+            "adadelta": torch.optim.Adadelta(self.model.parameters(), lr)
         }
         
         self.loss_fn = None
         self.optimizer = None
 
-        self.setLossFn()
-        self.setOptimizer(self.config["optimizer"])
-        
-        if(layers == 1):
-            self.fc1 = nn.Linear(43,43)
-            
-        elif(layers == 2):
-            self.fc1 = nn.Linear(43,hidden_dim)
-            self.fc2 = nn.Linear(hidden_dim,43)
-            
-        elif(layers == 3):
-            self.fc1 = nn.Linear(43,hidden_dim)
-            self.fc2 = nn.Linear(hidden_dim,hidden_dim2)
-            self.fc3 = nn.Linear(hidden_dim2,43)
+        self.set_loss_fn()
+        self.set_optimizer(optimizer)
 
-    def forward(self, x):
-        if self.countLayers == 1:
-            return self.fc1(x)
+        self.model = self._build_model(layers, hidden_dim, hidden_dim2)
+    
+    def _build_model(self, layers, hidden_dim, hidden_dim2):
+        if layers == 1:
+            return nn.Sequential(
+                nn.Linear(43, 43)
+            )
+        elif layers == 2:
+            return nn.Sequential(
+                nn.Linear(43, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, 43)
+            )
+        elif layers == 3:
+            return nn.Sequential(
+                nn.Linear(43, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, hidden_dim2),
+                nn.ReLU(),
+                nn.Linear(hidden_dim2, 43)
+            )
 
-        elif self.countLayers == 2:
-            x = F.relu(self.fc1(x))
-            return self.fc2(x)
-
-        elif self.countLayers == 3:
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-            return self.fc3(x)
-
-    def getLossFn(self):
+    def get_loss_fn(self):
         return self.loss_fn
 
-    def getOptimizer(self):
+    def get_optimizer(self):
         return self.optimizer
 
-    def setOptimizer(self, optimizier="adam"):
+    def set_optimizer(self, optimizier="adam"):
         self.optimizer = self.optimizer_map[optimizer]
 
-    def setLossFn(self, loss_fn=nn.CrossEntropyLoss()):
+    def set_loss_fn(self, loss_fn=nn.CrossEntropyLoss()):
         self.loss_fn = loss_fn
+
+    def get_instance(self):
+        return self.model
+
+    def get_model(self) -> str:
+        return f"Model: {self.base_model} ({self.layers} layers)"
