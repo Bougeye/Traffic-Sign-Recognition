@@ -12,6 +12,9 @@ def payloader(key_file="key", make_zip=True, remove_zip=True):
     ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     if ROOT not in sys.path:
         sys.path.append(ROOT)
+
+    time = datetime.now()
+    ts = str(time)[:10]+"_"+time.strftime("%H:%M:%S").replace(":","-")
     
     with open("config/paths.yml","r") as f:
         pths = yaml.safe_load(f)
@@ -101,4 +104,4 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     print("--- Copied results to experiments")
     print("### TASK FINISHED ###")
     
-payloader(make_zip=True, remove_zip=False)
+payloader(make_zip=False, remove_zip=False)

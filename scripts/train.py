@@ -10,6 +10,7 @@ if ROOT not in sys.path:
 
 from torch.utils.data import TensorDataset, DataLoader
 from src.data.gtsrb_dataset import GTSRBDataset
+from src.data.concepts_dataset import ConceptsDataset
 
 from src.training.Training_Loop import Training_Loop
 import src.models.ENV2 as stage_1_models
@@ -21,17 +22,20 @@ class train:
             self.tr_cfg = yaml.safe_load(f)
         with open("config/dataset.yml", "r") as f:
             self.ds_cfg = yaml.safe_load(f)
-        self.model_stage_1 = stage_1_models.ENV2(model_variant,self.tr_cfg["lr"], self.tr_cfg["optimizer"])
-        self.model_stage_2 = stage_2_models.LabelModel(3,128,64)
+        self.model_stage_1 = stage_1_models.ENV2(model_variant=model_variant, lr=self.tr_cfg["lr"], optimizer=self.tr_cfg["optimizer"])
+        self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["lr"], optimizer=self.tr_cfg["optimizer"],
+                                                       layers=3,hidden_dim=128,hidden_dim2=64)
         self.early_stopping = early_stopping
 
     def train(self):
         self.train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
-                                              bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
-                                              min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping)
+                                     bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
+                                     min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
+                                     multi_class=True)
         self.train_2 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
-                                              bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
-                                              min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping)
+                                     bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
+                                     min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
+                                     multi_class=False)
         
         self.train_1.set_model(self.model_stage_1)
         self.train_2.set_model(self.model_stage_2)
@@ -55,24 +59,24 @@ class train:
                             pin_memory = (device.type=="cuda"), batch_size=self.tr_cfg["bsize"])
         
         instance.to(device, memory_format=torch.channels_last)
-        
+
         for i, (xb,yb) in enumerate(loader):
-            print(f"Batch {i}")
-            xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
-            yb[0] = yb[0].to(device, non_blocking=True)
+            if True:
+                xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
+                yb[0] = yb[0].to(device, non_blocking=True)
 
-            with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
-                logits = instance(xb)
-                loss = loss_fn(logits,yb[0])
+                with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
+                    logits = instance(xb)
+                    loss = loss_fn(logits,yb[0])
 
-            pred = (logits.detach().cpu() >= 0).numpy().astype(float)
-            target = yb[0].detach().cpu().numpy().astype(float)
-            X_in.append(pred)
-            y_in.append(yb[1])
-            
-        X_in = torch.Tensor(np.vstack(X_in))
-        y_in = torch.Tensor(torch.cat(y_in, dim=0))
-        dataset = TensorDataset(X_in, y_in)
+                pred = (logits.detach().cpu() >= 0).numpy().astype(float)
+                target = yb[0].detach().cpu().numpy().astype(float)
+                out_vectors = torch.nn.functional.one_hot(yb[1], num_classes=43)
+                for i in range(len(pred)):
+                    X_in.append(pred[i])
+                for i in range(len(yb[1])):
+                    y_in.append(int(yb[i][1]))
+        dataset = ConceptsDataset(X_in, y_in)
         
         return dataset
 
@@ -96,3 +100,5 @@ class train:
 if __name__ == "__main__":
     x = train(model_variant="S", early_stopping=True)
     x.train()
+    #ds = x.forward_stage_1()
+    #x.read_dataset(ds)

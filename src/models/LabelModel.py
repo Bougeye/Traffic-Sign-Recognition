@@ -6,16 +6,19 @@ from torchvision import transforms, datasets, models
 import os
 import sys
 import yaml
-
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-sys.path.append(ROOT)
-
 from torch.utils.data import DataLoader
 
 class LabelModel():
-    def __init__(self, lr=0.01, optimizer="adam", layers=1, hidden_dim=0, hidden_dim2=0):
+    def __init__(self, lr=0.01, optimizer="adam", layers=1, hidden_dim=1, hidden_dim2=1):
         
         self.countLayers = layers
+        
+        self.loss_fn = None
+        self.optimizer = None
+
+        self.set_loss_fn()
+
+        self.model = self._build_model(layers, hidden_dim, hidden_dim2)
 
         self.optimizer_map = {
             "adam": torch.optim.Adam(self.model.parameters(), lr),
@@ -23,15 +26,8 @@ class LabelModel():
             "adagrad": torch.optim.Adagrad(self.model.parameters(), lr),
             "adadelta": torch.optim.Adadelta(self.model.parameters(), lr)
         }
-        
-        self.loss_fn = None
-        self.optimizer = None
-
-        self.set_loss_fn()
         self.set_optimizer(optimizer)
-
-        self.model = self._build_model(layers, hidden_dim, hidden_dim2)
-    
+        
     def _build_model(self, layers, hidden_dim, hidden_dim2):
         if layers == 1:
             return nn.Sequential(
@@ -58,7 +54,7 @@ class LabelModel():
     def get_optimizer(self):
         return self.optimizer
 
-    def set_optimizer(self, optimizier="adam"):
+    def set_optimizer(self, optimizer="adam"):
         self.optimizer = self.optimizer_map[optimizer]
 
     def set_loss_fn(self, loss_fn=nn.CrossEntropyLoss()):

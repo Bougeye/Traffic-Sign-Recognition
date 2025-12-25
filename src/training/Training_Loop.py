@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision
 from torchvision import transforms, datasets
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split
 import sklearn.metrics as metrics
 import os
 import pandas as pd
@@ -23,12 +23,13 @@ import src.utils.plots as plots
 import src.models.ENV2 as models
 
 class Training_Loop:
-    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True):
+    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_class=False):
 
         self.model = None
         self.epochs = epochs
         self.bsize =bsize
         self.bpdc = bpdc
+        self.multi_class = multi_class
 
         self.early_stopping = early_stopping
         self.patience = patience
@@ -43,17 +44,17 @@ class Training_Loop:
             print("Error: Model not configured")
             return
         total_samples = len(dataset)
-        labels = [label for _,label in dataset.samples]
+        labels = [dataset[i][1][1] for i in range(len(dataset))]
         idx = list(range(len(dataset)))
 
-        train_idx, val_idx = train_test_split(range(len(dataset)), test_size=0.2, random_state=69, stratify=labels)
+        train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=0.2, random_state=69, stratify=labels)
         train_idx = [idx[i] for i in train_idx]
         val_idx = [idx[i] for i in val_idx]
 
         train_ds = Subset(dataset, train_idx)
         val_ds = Subset(dataset, val_idx)
 
-        Fold,Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[],[]
+        Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[]
         
         instance = self.model.get_instance()
         optimizer = self.model.get_optimizer()
@@ -64,7 +65,7 @@ class Training_Loop:
 
         max_workers = 4+4*(device.type != "cuda")
 
-        instance.to(device, memory_format=torch.channels_last)
+        instance.to(device)
 
         train_loader = DataLoader(train_ds, shuffle=True, num_workers=max_workers, persistent_workers=True,
                                   pin_memory = (device.type=="cuda"), batch_size=self.bsize)
@@ -84,7 +85,7 @@ class Training_Loop:
                 total_samples = 0
                 running_loss = 0
                 for i, (xb,yb) in enumerate(train_loader):
-                    xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
+                    xb = xb.to(device, non_blocking=True)
                     yb[0] = yb[0].to(device, non_blocking=True)
                     optimizer.zero_grad(set_to_none=True)
                         
@@ -128,7 +129,7 @@ class Training_Loop:
                         print("Stopping early")
                         break
                 
-        self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Fold":Fold,"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})], ignore_index=True)
+        self.output_batches = pd.concat([self.output_batches,pd.DataFrame({"Epoch":Epoch,"Batch":Batch,"Training Loss":Train_Loss})], ignore_index=True)
 
         target_folder = os.path.join("Results",out_folder)
         os.makedirs(target_folder, exist_ok=True)
@@ -149,7 +150,7 @@ class Training_Loop:
 
     
     def validate(self, epoch, instance, device, loss_fn, val_loader, 
-                 mode="eval", target="batch", multi=False):
+                 mode="eval", target="batch"):
         instance.eval()
         if mode == "train":
             instance.train()
@@ -171,7 +172,7 @@ class Training_Loop:
                 if i not in batch_ids:
                     continue
                 
-                xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
+                xb = xb.to(device, non_blocking=True)
                 yb[0] = yb[0].to(device, non_blocking=True)
                 
                 with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
@@ -181,7 +182,7 @@ class Training_Loop:
                 total_samples+=self.bsize
                 total_loss+=loss.item()*self.bsize
 
-                if multi:
+                if self.multi_class == True:
                     pred = (logits.detach().cpu() >= 0).numpy().astype(float)
                 else:
                     pred = logits.argmax(dim=1).detach().cpu()

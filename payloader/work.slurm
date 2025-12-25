@@ -21,15 +21,17 @@ CACHE_BASE="${VENV_BASE}/.cache"
 
 mkdir -p "${VENV_BASE}" "${CACHE_BASE}" "${HOME}/Payload/logs"
 
+# --- (Optional) module env, ignore if cluster doesn't use modules ---
 module purge >/dev/null 2>&1 || true
 module load python/3.10 >/dev/null 2>&1 || true
 
-
+# --- Create venv once, then reuse it every run ---
 if [ ! -x "${VENV}/bin/python" ]; then
   python3 -m venv "${VENV}"
 fi
 source "${VENV}/bin/activate"
--
+
+# --- Keep heavy caches away from $HOME quota ---
 export TMPDIR="${CACHE_BASE}/tmp"
 export PIP_CACHE_DIR="${CACHE_BASE}/pip"
 export TORCH_HOME="${CACHE_BASE}/torch"
@@ -37,8 +39,16 @@ export HF_HOME="${CACHE_BASE}/hf"
 export CUDA_CACHE_PATH="${CACHE_BASE}/.nv/ComputeCache"
 mkdir -p "${TMPDIR}" "${PIP_CACHE_DIR}" "${TORCH_HOME}" "${HF_HOME}" "${CUDA_CACHE_PATH}"
 
+# --- Tooling up-to-date (inside venv) ---
 python -m pip install -U pip wheel setuptools packaging --no-cache-dir
 
+# --- Ensure required Python modules are available INSIDE the venv ---
+# Stdlib modules (sys/time/datetime) are always present and are checked only as a sanity test.
+# Third-party mapping:
+#   yaml -> PyYAML
+#   sklearn.model_selection -> scikit-learn
+#   pandas -> pandas
+#   seaborn -> seaborn
 
 MISSING_IMPORTS="$(python - <<'PY'
 import importlib
@@ -80,6 +90,7 @@ if [ -n "${MISSING_IMPORTS}" ]; then
     esac
   done
 
+  # De-duplicate package list (bash-only, stable enough for short lists)
   if [ ${#PIP_PKGS[@]} -gt 0 ]; then
     UNIQUE_PKGS=()
     for p in "${PIP_PKGS[@]}"; do
@@ -97,6 +108,8 @@ else
   echo "All required imports already available in venv."
 fi
 
+# --- Ensure PyTorch stack is complete (torch + torchvision + torchaudio), venv-aware ---
+# If your cluster uses a different CUDA runtime, change cu121 accordingly.
 TORCH_INDEX_URL="https://download.pytorch.org/whl/cu121"
 TORCH_TARGET="2.4.1"
 TV_TARGET="0.19.1"
@@ -133,6 +146,7 @@ if ${NEED_TORCH}; then
     "torchaudio==${TA_TARGET}"
 fi
 
+# --- Verify imports after installations (fail fast) ---
 python - <<'PY'
 import importlib, sys
 
@@ -163,6 +177,7 @@ if missing:
 print("Import check passed (including torchvision).")
 PY
 
+# --- Quick env/driver sanity printout (shows in logs/slurm-*.out) ---
 python - <<'PY'
 import os, subprocess
 print("=== ENV ===")
@@ -191,5 +206,6 @@ except Exception as e:
     print("nvidia-smi error:", e)
 PY
 
+# --- Run your project from the unpacked Payload folder ---
 cd "${HOME}/Payload"
 python scripts/train.py
