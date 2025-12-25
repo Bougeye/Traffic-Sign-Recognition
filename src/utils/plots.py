@@ -4,6 +4,15 @@ import pandas as pd
 import os
 
 def epoch_loss(df,out_folder):
+    """
+    Req.: A pandas dataframe is provided containing the following columns:
+          #Epoch: The epoch number
+          #Training Loss: The training loss of the respective epoch
+          #Validation Loss: The validation loss of the respective epoch
+          Additionally an output folder must be specified that the plot is written to.
+    Eff.: Validation loss and training loss per epoch are plotted and saved to the output folder.
+    Res.: -
+    """
     df_train = df.copy()
     df_val = df.copy()
     df_train.loc[:,"Mode"] = "Training"
@@ -19,6 +28,18 @@ def epoch_loss(df,out_folder):
     plt.close(g.figure)
 
 def batch_loss(df_b,bpdc,total_samples,out_folder):
+    """
+    Req.: A pandas dataframe is provided containing the following columns:
+              #Epoch: The epoch number
+              #Batch: The amount of processed batches in the respective epoch
+              #Training Loss: The training loss of the last -bpdc- 
+          Additionally the following parameters must be specified:
+          #bpdc: the amount of batches after which data collection is performed mid-epoch
+          #total_samples: The total amount of samples in the underlying dataset
+          #out_folder: The output folder the plot is saved to
+    Eff.: Training loss per bpdc and epoch are plotted and saved to the output folder.
+    Res.: -
+    """
     df_b["Batch_total"] = df_b["Epoch"]*(total_samples//bpdc)+df_b["Batch"]
     g = sns.lineplot(x="Batch_total", y="Training Loss", data = df_b)
     os.makedirs(out_folder, exist_ok=True)
@@ -27,6 +48,14 @@ def batch_loss(df_b,bpdc,total_samples,out_folder):
     plt.close(g.figure)
 
 def epoch_accuracy(df,out_folder):
+    """
+    Req.: A pandas dataframe is provided containing the following columns:
+              #epoch: The epoch number
+              #accuracy: The validation accuracy of the respective epoch
+          Additionally an output folder must be specified that the plot is written to.
+    Eff.: Accuracy per epoch is plotted and saved to the output folder.
+    Res.: -
+    """
     g = sns.lineplot(x="epoch",y="accuracy",data=df)
     os.makedirs(out_folder, exist_ok=True)
     fig = g.figure
@@ -34,6 +63,12 @@ def epoch_accuracy(df,out_folder):
     plt.close(g.figure)
 
 def report(df,out_folder):
+    """
+    Req.: A pandas dataframe by the scikit classification report format is provided.
+          Additionally an output folder must be specified that the plot is written to.
+    Eff.: Precision, recall and f1-score per class are plotted seperately and saved to the output folder
+    Res.: -
+    """
     df["class"] = df.groupby("epoch").cumcount()%43
     print(df)
     os.makedirs(out_folder, exist_ok=True)
