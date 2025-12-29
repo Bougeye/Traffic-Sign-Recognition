@@ -31,11 +31,11 @@ class train:
         self.train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
                                      bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
                                      min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
-                                     multi_class=True)
+                                     multi_label=True)
         self.train_2 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
                                      bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
                                      min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
-                                     multi_class=False)
+                                     multi_label=False)
         
         self.train_1.set_model(self.model_stage_1)
         self.train_2.set_model(self.model_stage_2)
