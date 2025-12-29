@@ -19,5 +19,5 @@ class ConceptsDataset(Dataset):
 
     def __getitem__(self, idx):
         xb = torch.tensor(self.X_in[idx],dtype=torch.float32)
-        yb = torch.tensor(self.y_in[idx],dtype=torch.float32)
-        return xb,yb
+        yb = torch.tensor(self.y_in[idx],dtype=torch.long)
+        return xb, (yb,yb)

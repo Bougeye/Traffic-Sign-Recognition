@@ -59,23 +59,26 @@ class train:
                             pin_memory = (device.type=="cuda"), batch_size=self.tr_cfg["bsize"])
         
         instance.to(device, memory_format=torch.channels_last)
+        instance.eval()
+        with torch.no_grad():
+            for i, (xb,yb) in enumerate(loader):
+                if True:
+                    print(f"Batch: {i}")
+                    xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
+                    yb[0] = yb[0].to(device, non_blocking=True)
 
-        for i, (xb,yb) in enumerate(loader):
-            if True:
-                xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
-                yb[0] = yb[0].to(device, non_blocking=True)
+                    with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
+                        logits = instance(xb)
+                        loss = loss_fn(logits,yb[0])
 
-                with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
-                    logits = instance(xb)
-                    loss = loss_fn(logits,yb[0])
-
-                pred = (logits.detach().cpu() >= 0).numpy().astype(float)
-                target = yb[0].detach().cpu().numpy().astype(float)
-                out_vectors = torch.nn.functional.one_hot(yb[1], num_classes=43)
-                for i in range(len(pred)):
-                    X_in.append(pred[i])
-                for i in range(len(yb[1])):
-                    y_in.append(int(yb[i][1]))
+                    pred = (logits.detach().cpu() >= 0).numpy().astype(float)
+                    target = yb[0].detach().cpu().numpy().astype(float)
+                    out_vectors = torch.nn.functional.one_hot(yb[1], num_classes=43)
+                    print(yb[1])
+                    for j in range(len(pred)):
+                        X_in.append(pred[j])
+                    for j in range(len(yb[1])):
+                        y_in.append(int(yb[1][j]))
         dataset = ConceptsDataset(X_in, y_in)
         
         return dataset

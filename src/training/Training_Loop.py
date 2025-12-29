@@ -190,8 +190,8 @@ class Training_Loop:
                 target = yb[0].detach().cpu()
                 all_preds.append(pred)
                 all_targets.append(target)
-        all_preds = np.vstack(all_preds)
-        all_targets = np.vstack(all_targets)
+        all_preds = np.concatenate(all_preds)
+        all_targets = np.concatenate(all_targets)
 
         metric_map = self.generate_metrics(all_preds, all_targets, epoch)
         self.output_report = pd.concat([self.output_report,metric_map["report"]], ignore_index=True)
