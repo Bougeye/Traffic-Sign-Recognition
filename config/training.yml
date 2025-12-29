@@ -1,8 +1,19 @@
-epochs: 1
-lr: 0.0001
-bsize: 16               #batchsize
-optimizer: "adam"
-folds: 5
-bpdc: 20                #batches per data collection to collect metrics throughout an epoch
-patience: 5
-min_delta: 0.05
+stage_1:
+   epochs: 5
+   lr: 0.0001
+   bsize: 16               #batchsize
+   optimizer: "adam"
+   folds: 5
+   bpdc: 20                #batches per data collection to collect metrics throughout an epoch
+   patience: 5
+   min_delta: 0.05
+
+stage_2:
+   epochs: 20
+   lr: 0.001
+   bsize: 64
+   optimizer: "adam"
+   folds: 5
+   bpdc: 20
+   patience: 5
+   min_delta: 0.05

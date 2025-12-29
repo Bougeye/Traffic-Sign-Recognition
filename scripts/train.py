@@ -22,19 +22,19 @@ class train:
             self.tr_cfg = yaml.safe_load(f)
         with open("config/dataset.yml", "r") as f:
             self.ds_cfg = yaml.safe_load(f)
-        self.model_stage_1 = stage_1_models.ENV2(model_variant=model_variant, lr=self.tr_cfg["lr"], optimizer=self.tr_cfg["optimizer"])
-        self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["lr"], optimizer=self.tr_cfg["optimizer"],
+        self.model_stage_1 = stage_1_models.ENV2(model_variant=model_variant, lr=self.tr_cfg["stage_1"]["lr"], optimizer=self.tr_cfg["stage_1"]["optimizer"])
+        self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["stage_2"]["lr"], optimizer=self.tr_cfg["stage_2"]["optimizer"],
                                                        layers=3,hidden_dim=128,hidden_dim2=64)
         self.early_stopping = early_stopping
 
     def train(self):
-        self.train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
-                                     bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
-                                     min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
+        self.train_1 = Training_Loop(epochs=self.tr_cfg["stage_1"]["epochs"], bsize=self.tr_cfg["stage_1"]["bsize"],
+                                     bpdc=self.tr_cfg["stage_1"]["bpdc"], patience=self.tr_cfg["stage_1"]["patience"],
+                                     min_delta=self.tr_cfg["stage_1"]["min_delta"],early_stopping=self.early_stopping,
                                      multi_label=True)
-        self.train_2 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
-                                     bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
-                                     min_delta=self.tr_cfg["min_delta"],early_stopping=self.early_stopping,
+        self.train_2 = Training_Loop(epochs=self.tr_cfg["stage_2"]["epochs"], bsize=self.tr_cfg["stage_2"]["bsize"],
+                                     bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
+                                     min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=self.early_stopping,
                                      multi_label=False)
         
         self.train_1.set_model(self.model_stage_1)
@@ -50,35 +50,29 @@ class train:
     def forward_stage_1(self):
         X_in, y_in = [],[]
         instance = self.model_stage_1.get_instance()
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-        loss_fn = self.model_stage_1.get_loss_fn()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         gtsrb_ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                 path_config="config/paths.yml")
         loader = DataLoader(gtsrb_ds, shuffle=True, num_workers=8, persistent_workers=True,
-                            pin_memory = (device.type=="cuda"), batch_size=self.tr_cfg["bsize"])
+                            pin_memory = (device.type=="cuda"), batch_size=self.tr_cfg["stage_1"]["bsize"])
         
         instance.to(device, memory_format=torch.channels_last)
         instance.eval()
+        
         with torch.no_grad():
             for i, (xb,yb) in enumerate(loader):
-                if True:
-                    print(f"Batch: {i}")
-                    xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
-                    yb[0] = yb[0].to(device, non_blocking=True)
+                xb = xb.to(device, memory_format=torch.channels_last, non_blocking=True)
+                yb[0] = yb[0].to(device, non_blocking=True)
+                with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
+                    logits = instance(xb)
 
-                    with torch.autocast(device_type=device.type, enabled=(device.type=="cuda")):
-                        logits = instance(xb)
-                        loss = loss_fn(logits,yb[0])
-
-                    pred = (logits.detach().cpu() >= 0).numpy().astype(float)
-                    target = yb[0].detach().cpu().numpy().astype(float)
-                    out_vectors = torch.nn.functional.one_hot(yb[1], num_classes=43)
-                    print(yb[1])
-                    for j in range(len(pred)):
-                        X_in.append(pred[j])
-                    for j in range(len(yb[1])):
-                        y_in.append(int(yb[1][j]))
+                pred = (logits.detach().cpu() >= 0).numpy().astype(float)
+                target = yb[0].detach().cpu().numpy().astype(float)
+                for j in range(len(pred)):
+                    X_in.append(pred[j])
+                for j in range(len(yb[1])):
+                    y_in.append(int(yb[1][j]))
         dataset = ConceptsDataset(X_in, y_in)
         
         return dataset
@@ -93,10 +87,10 @@ class train:
         gtsrb_ds = GTSRBDataset(dataset_config="config/dataset.yml",
                                 path_config="config/paths.yml")
         for learning_rate in [0.01,0.001,0.0001,0.00001]:
-            model_stage_1 = stage_1_models.ENV2(model_variant,learning_rate, self.tr_cfg["optimizer"])
-            train_1 = Training_Loop(epochs=self.tr_cfg["epochs"], bsize=self.tr_cfg["bsize"],
-                                                bpdc=self.tr_cfg["bpdc"], patience=self.tr_cfg["patience"],
-                                                min_delta=self.tr_cfg["min_delta"],early_stopping=early_stopping)
+            model_stage_1 = stage_1_models.ENV2(model_variant,learning_rate, self.tr_cfg["stage_1"]["optimizer"])
+            train_1 = Training_Loop(epochs=self.tr_cfg["stage_1"]["epochs"], bsize=self.tr_cfg["stage_1"]["bsize"],
+                                                bpdc=self.tr_cfg["stage_1"]["bpdc"], patience=self.tr_cfg["stage_1"]["patience"],
+                                                min_delta=self.tr_cfg["stage_1"]["min_delta"],early_stopping=early_stopping)
             train_1.set_model(model_stage_1)
             train_1.train(dataset=gtsrb_ds, out_folder=f"lr-{learning_rate}")
 
