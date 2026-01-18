@@ -42,10 +42,10 @@ class train:
         
         dataset_1 = GTSRBDataset(dataset_config="config/dataset.yml",
                                  path_config="config/paths.yml")
-        self.train_1.train(dataset_1, out_folder="Stage_1")
+        self.train_1.train(dataset_1, out_folder="stage_1")
         
         dataset_2 = self.forward_stage_1()
-        self.train_2.train(dataset_2, out_folder="Stage_2")
+        self.train_2.train(dataset_2, out_folder="stage_2")
 
     def forward_stage_1(self):
         X_in, y_in = [],[]

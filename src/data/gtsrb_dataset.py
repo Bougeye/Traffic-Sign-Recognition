@@ -6,10 +6,10 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
-
+import pandas as pd
 
 class GTSRBDataset(Dataset):
-    def __init__(self, dataset_config="config/dataset.yml", path_config="config/paths.yml",  transform=None):
+    def __init__(self, dataset_config="config/dataset.yml", path_config="config/paths.yml", target="training", transform=None):
         with open(dataset_config, "r") as f:
             cfg = yaml.safe_load(f)
         ds_cfg = cfg["dataset"]
@@ -17,7 +17,7 @@ class GTSRBDataset(Dataset):
             cfg = yaml.safe_load(f)
         pth_cfg = cfg["data"]
 
-        self.root_dir = pth_cfg["training"]
+        self.root_dir = pth_cfg[target]
         self.concept_csv = pth_cfg["concepts"]
 
         if transform is None:
@@ -32,22 +32,42 @@ class GTSRBDataset(Dataset):
             self.transform = transform
 
         # collect all image files + labels
-        self.samples = []
+        print("Collecting samples")
+        if target=="training":
+            self.samples = self._collect_from_training()
+        elif target=="test":
+            self.samples = self._collect_from_test()
+        else:
+            raise ValueError("Wrong mode selected. Either pick 'training' or 'test'.")
+        print("Collecting concepts")
+        # load concepts from CSV
+        self.class_to_concepts = self._load_concept_file(self.concept_csv)
+        print("Collected concepts")
+
+    def _collect_from_training(self):
+        samples = []
         for folder in sorted(os.listdir(self.root_dir)):
             folder_path = os.path.join(self.root_dir, folder)
             if not os.path.isdir(folder_path):
                 continue
-
             for fname in os.listdir(folder_path):
                 if fname.lower().endswith((".ppm", ".jpg", ".png")):
-                    self.samples.append((
+                    samples.append((
                         os.path.join(folder_path, fname),
                         int(folder)   
                     ))
+        return samples
 
-        # load concepts from CSV
-        self.class_to_concepts = self._load_concept_file(self.concept_csv)
-
+    def _collect_from_test(self):
+        path = os.path.join(self.root_dir, "GT-final_test.csv")
+        gt = pd.read_csv(os.path.join(self.root_dir,"GT-final_test.csv"), sep=";")
+        samples = []
+        for fname in os.listdir(self.root_dir):
+            if fname.lower().endswith((".ppm", ".jpg", ".png")):
+                samples.append((
+                    os.path.join(self.root_dir,fname),
+                    int(gt[gt.Filename==fname]["ClassId"].iloc[0])))
+        return samples
 
     def _load_concept_file(self, csv_path):
         concepts = {}

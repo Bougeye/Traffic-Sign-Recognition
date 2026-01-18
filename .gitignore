@@ -8,3 +8,4 @@ payloader/Payload/
 payloader/Payload.zip
 payloader/Results/
 tests/*/*.pth
+*pth

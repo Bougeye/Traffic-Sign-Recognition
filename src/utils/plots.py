@@ -79,3 +79,28 @@ def report(df,out_folder):
         fig.savefig(os.path.join(out_folder,f"epoch_{e}.png"))
         plt.close(g.figure)
 
+def class_distribution(preds,train_pth,out_folder):
+    train = []
+    for e in os.listdir(train_pth):
+        fpath = os.path.join(train_pth,e)
+        if os.path.isdir:
+            train+=[int(e)]*len(os.listdir(fpath))
+    df = pd.DataFrame({"class":train+preds,"group":["train"]*len(train)+["test"]*len(preds)})
+    g = sns.catplot(x="class",kind="count",col="group",hue="group",col_wrap=1,height=3,aspect=4.0,sharey=False,data=df)
+    os.makedirs(out_folder, exist_ok=True)
+    fig = g.figure
+    ###compute distance:
+    train = df[df.group == "train"].groupby("class").size()
+    test = df[df.group == "test"].groupby("class").size()
+    s_dist = (train/train.sum())-(test/test.sum())
+    avg_dist = s_dist.abs().mean()
+    trtote_dist = (s_dist.abs()*(train/train.sum())).sum()
+    tetotr_dist = (s_dist.abs()*(test/test.sum())).sum()
+    print("avg_dist: ",avg_dist)
+    print("trtote_dist: ",trtote_dist)
+    print("tetotr_dist: ",tetotr_dist)
+    #fig.text(0.05,0.0,f"Average error assuming stratified train/test split: {avg_dist:.8f}")
+    #fig.text(0.05,-0.05,f"Total error assuming stratified train/test split: {total_dist:.8f}")
+    fig.savefig(os.path.join(out_folder,"class_distribution.png"))
+    plt.close(g.figure)
+    

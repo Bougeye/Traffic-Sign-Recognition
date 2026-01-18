@@ -39,7 +39,7 @@ class Training_Loop:
         """
         self.model = None
         self.epochs = epochs
-        self.bsize =bsize
+        self.bsize = bsize
         self.bpdc = bpdc
         self.multi_label = multi_label
 
@@ -59,9 +59,14 @@ class Training_Loop:
         Eff.: A previously set model is trained on the dataset with the hyperparameters set at initialization of the loop.
         Res.: A dictionary of training metrics is returned, containing accuracy, validation loss, training loss, training time etc..
         """
+          
+        
         if self.model == None:
             print("Error: Model not configured")
             return
+
+        
+        
         total_samples = len(dataset)
         labels = [dataset[i][1][1] for i in range(len(dataset))]
         idx = list(range(len(dataset)))
@@ -78,6 +83,7 @@ class Training_Loop:
         instance = self.model.get_instance()
         optimizer = self.model.get_optimizer()
         loss_fn = self.model.get_loss_fn()
+
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         scaler = torch.cuda.amp.GradScaler(enabled=(device.type == "cuda"))
@@ -94,6 +100,11 @@ class Training_Loop:
 
         val_loss = np.inf
         best_val_loss = np.inf
+
+        checkpoint = {"epoch":0,
+                      "best_model":instance.state_dict(),
+                      "best_optimizer":optimizer.state_dict(),
+                      "val_loss":val_loss}
 
         print("device:",device)
         
@@ -142,6 +153,10 @@ class Training_Loop:
                         self.patience -= 1
                         print(f"patience decreased: patience is now  {self.patience}")
                     else:
+                        checkpoint = {"epoch":epoch,
+                                      "best_model":instance.state_dict(),
+                                      "best_optimizer":optimizer.state_dict(),
+                                      "val_loss":val_loss}
                         self.patience = min(self.patience+1, 5)
                         best_val_loss = val_loss
                     if self.patience == 0 or np.isnan(train_loss) or np.isnan(val_loss):
@@ -162,6 +177,10 @@ class Training_Loop:
         plots.batch_loss(pd.read_csv(f"{target_folder}/Output_batches.csv"),self.bpdc, total_samples,f"{target_folder}/Plots")
         plots.report(pd.read_csv(f"{target_folder}/Output_report.csv"),f"{target_folder}/Plots")
         plots.epoch_accuracy(pd.read_csv(f"{target_folder}/Output_accuracy.csv"),f"{target_folder}/Plots")
+
+        checkpoint["last_model"] = instance.state_dict()
+        checkpoint["last_optimizer"] = optimizer.state_dict()
+        torch.save(checkpoint,f"{target_folder}/{target_folder}.pth")
 
         output_dict = {"output_batches":self.output_batches,"output_epochs":self.output_epochs,
                        "output_report":self.output_report,"output_accuracy":self.output_accuracy}
