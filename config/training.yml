@@ -7,6 +7,7 @@ stage_1:
    bpdc: 20                #batches per data collection to collect metrics throughout an epoch
    patience: 5
    min_delta: 0.05
+   random_seed: 69
 
 stage_2:
    epochs: 20
@@ -17,3 +18,4 @@ stage_2:
    bpdc: 20
    patience: 5
    min_delta: 0.05
+   random_seed: 69

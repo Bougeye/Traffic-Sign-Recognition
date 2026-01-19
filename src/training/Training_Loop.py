@@ -24,7 +24,7 @@ import src.models.ENV2 as models
 
 class Training_Loop:
     
-    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False):
+    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False, random_seed=69):
         """
         Req.: The following list of parameters may be provided:
               #epochs: The amount of epochs the model goes through in training
@@ -42,6 +42,7 @@ class Training_Loop:
         self.bsize = bsize
         self.bpdc = bpdc
         self.multi_label = multi_label
+		self.random_seed = random_seed
 
         self.early_stopping = early_stopping
         self.patience = patience
@@ -71,7 +72,7 @@ class Training_Loop:
         labels = [dataset[i][1][1] for i in range(len(dataset))]
         idx = list(range(len(dataset)))
 
-        train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=0.2, random_state=69, stratify=labels)
+        train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=0.2, self.random_seed, stratify=labels)
         train_idx = [idx[i] for i in train_idx]
         val_idx = [idx[i] for i in val_idx]
 
