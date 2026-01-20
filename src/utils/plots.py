@@ -79,13 +79,22 @@ def report(df,out_folder):
         fig.savefig(os.path.join(out_folder,f"epoch_{e}.png"))
         plt.close(g.figure)
 
+def per_label_accuracy(df, out_folder):
+    real_out = os.path.join(out_folder,"per_label_metrics")
+    os.makedirs(real_out, exist_ok=True)
+    for e in df:
+        if e != "epoch":
+            g = sns.lineplot(x="epoch",y=e,data=df)
+            g.figure.savefig(os.path.join(real_out,f"label_{e}_accuracy.png"))
+            plt.close(g.figure)
+
 def class_distribution(preds,train_pth,out_folder):
     train = []
     for e in os.listdir(train_pth):
         fpath = os.path.join(train_pth,e)
         if os.path.isdir:
             train+=[int(e)]*len(os.listdir(fpath))
-    df = pd.DataFrame({"class":train+preds,"group":["train"]*len(train)+["test"]*len(preds)})
+    df = pd.DataFrame({"class":train+list(preds),"group":["train"]*len(train)+["test"]*len(preds)})
     g = sns.catplot(x="class",kind="count",col="group",hue="group",col_wrap=1,height=3,aspect=4.0,sharey=False,data=df)
     os.makedirs(out_folder, exist_ok=True)
     fig = g.figure

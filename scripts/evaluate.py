@@ -69,7 +69,10 @@ class evaluate:
 
     def evaluate_on(self, target="training"):
         start = time.time()
-        print("Intializing validation split...")
+        mode = target
+        if mode == "training":
+            mode = "val"
+        print(f"Intializing {mode} split...")
         dataset = GTSRBDataset(dataset_config="config/dataset.yml",
                                path_config="config/paths.yml",
                                target=target)
@@ -77,11 +80,12 @@ class evaluate:
             labels = [dataset[i][1][1] for i in range(len(dataset))]
             _, idx = train_test_split(list(range(len(dataset))), test_size=0.2, random_state=69, stratify=labels)
             dataset = Subset(dataset, idx)
-        val_loader = DataLoader(dataset, num_workers=self.max_workers, persistent_workers=True,
+        loader = DataLoader(dataset, num_workers=self.max_workers, persistent_workers=True,
                                 pin_memory=(self.device.type=="cuda"), batch_size=self.bsize)
         
-        print("Running evaluation on validation split...")
+        print(f"Running evaluation on {mode} split...")
         all_concept_preds, all_label_preds, all_concept_targets, all_label_targets = [],[],[],[]
+        wrongs = []
         with torch.no_grad():
             for i, (xb,yb) in enumerate(loader):
                 xb = xb.to(self.device, non_blocking=True)
@@ -94,12 +98,15 @@ class evaluate:
                     label_pred = logits.argmax(dim=1).detach().cpu()
                     concept_target = yb[0].detach().cpu()
                     label_target = yb[1].detach().cpu()
-                
+                for i in range(len(label_pred)):
+                    if label_pred[i] != label_target[i]:
+                        wrongs.append({"input":xb[i],"label_pred":label_pred[i],"label_target":label_target[i],
+                                       "concept_pred":concept_pred[i],"concept_target":concept_target[i]})   
                 all_concept_preds.append(concept_pred)    
                 all_label_preds.append(label_pred)
                 all_concept_targets.append(concept_target)
                 all_label_targets.append(label_target)
-                
+        print(len(wrongs))
         all_concept_preds = np.concatenate(all_concept_preds)
         all_label_preds = np.concatenate(all_label_preds)
         all_concept_targets = np.concatenate(all_concept_targets)
@@ -108,89 +115,26 @@ class evaluate:
         label_report = pd.DataFrame(metrics.classification_report(all_label_targets, all_label_preds, output_dict=True)).transpose()
         concept_accuracy = metrics.accuracy_score(all_concept_targets, all_concept_preds, normalize=True)
         label_accuracy = metrics.accuracy_score(all_label_targets, all_label_preds, normalize=True)
-        os.makedirs(f"reports/Eval-{self.ts}", exist_ok=True)
-        if target=="training":
-            concept_report.to_csv(f"reports/Eval-{self.ts}/val_concept_report.csv")
-            label_report.to_csv(f"reports/Eval-{self.ts}/val_label_report.csv")
-        else:
-            concept_report.to_csv(f"reports/Eval-{self.ts}/test_concept_report.csv")
-            label_report.to_csv(f"reports/Eval-{self.ts}/test_label_report.csv")
-        print("Concept accuracy: ",concept_accuracy)
-        print("Label accuracy: ",label_accuracy)
-        end = time.time()
-        print("Time spent: ",end-start)
-    
-    def evaluate_on_test(self):
-        start = time.time()
-        print("Initializing test dataset...")
-        test_dataset = GTSRBDataset(dataset_config="config/dataset.yml",
-                                        path_config="config/paths.yml", target="test")
-        test_loader = DataLoader(test_dataset, num_workers=self.max_workers, persistent_workers=True,
-                                 pin_memory = (self.device.type=="cuda"), batch_size=self.bsize)
-        print("Running evaluation on test dataset...")
-        all_preds = []
-        with torch.no_grad():
-            for i, (xb,yb) in enumerate(test_loader):
-                xb = xb.to(self.device, non_blocking=True)
-                with torch.autocast(device_type=self.device.type, enabled=(self.device.type=="cuda")):
-                    logits = self.instance_1(xb)
-                    concepts = torch.tensor((logits.detach().cpu() >= 0).numpy().astype(float),dtype=torch.float32)
-                    logits = self.instance_2(concepts)
-                    pred = logits.argmax(dim=1).detach().cpu()
-                all_preds.append(pred)
-        all_preds = list(np.concatenate(all_preds))
-        plots.class_distribution(all_preds,self.pth_cfg["data"]["training"],f"reports/Eval-{self.ts}")
-        end = time.time()
-        print("Time spent: ",end-start)
-
-
-
-    def evaluate_on_val(self):
-        start = time.time()
-        print("Intializing validation split...")
-        val_dataset = GTSRBDataset(dataset_config="config/dataset.yml",
-                                        path_config="config/paths.yml")
-        labels = [val_dataset[i][1][1] for i in range(len(val_dataset))]
-        _, val_idx = train_test_split(list(range(len(val_dataset))), test_size=0.2, random_state=69, stratify=labels)
-        val_dataset = Subset(val_dataset, val_idx)
-        val_loader = DataLoader(val_dataset, num_workers=self.max_workers, persistent_workers=True,
-                                pin_memory=(self.device.type=="cuda"), batch_size=self.bsize)
+        acc = pd.DataFrame({"ConceptAcc":[concept_accuracy],"LabelAcc":[label_accuracy]})
+        concept_cm = metrics.multilabel_confusion_matrix(all_label_targets,all_label_preds)
+        label_cm = metrics.confusion_matrix(all_label_targets,all_label_preds)
         
-        print("Running evaluation on validation split...")
-        all_concept_preds, all_label_preds, all_concept_targets, all_label_targets = [],[],[],[]
-        with torch.no_grad():
-            for i, (xb,yb) in enumerate(val_loader):
-                xb = xb.to(self.device, non_blocking=True)
-                yb[0] = yb[0].to(self.device, non_blocking=True)
-                yb[1] = yb[1].to(self.device, non_blocking=True)
-                with torch.autocast(device_type=self.device.type, enabled=(self.device.type=="cuda")):
-                    logits = self.instance_1(xb)
-                    concept_pred = torch.tensor((logits.detach().cpu() >= 0).numpy().astype(float), dtype=torch.float32)
-                    logits = self.instance_2(concept_pred)
-                    label_pred = logits.argmax(dim=1).detach().cpu()
-                    concept_target = yb[0].detach().cpu()
-                    label_target = yb[1].detach().cpu()
-                
-                all_concept_preds.append(concept_pred)    
-                all_label_preds.append(label_pred)
-                all_concept_targets.append(concept_target)
-                all_label_targets.append(label_target)
-                
-        all_concept_preds = np.concatenate(all_concept_preds)
-        all_label_preds = np.concatenate(all_label_preds)
-        all_concept_targets = np.concatenate(all_concept_targets)
-        all_label_targets =  np.concatenate(all_label_targets)
-        concept_report = pd.DataFrame(metrics.classification_report(all_concept_targets, all_concept_preds, output_dict=True)).transpose()
-        label_report = pd.DataFrame(metrics.classification_report(all_label_targets, all_label_preds, output_dict=True)).transpose()
-        concept_accuracy = metrics.accuracy_score(all_concept_targets, all_concept_preds, normalize=True)
-        label_accuracy = metrics.accuracy_score(all_label_targets, all_label_preds, normalize=True)
         os.makedirs(f"reports/Eval-{self.ts}", exist_ok=True)
-        concept_report.to_csv(f"reports/Eval-{self.ts}/val_concept_report.csv")
-        label_report.to_csv(f"reports/Eval-{self.ts}/val_label_report.csv")
+        
+        concept_report.to_csv(f"reports/Eval-{self.ts}/{mode}_concept_report.csv")
+        label_report.to_csv(f"reports/Eval-{self.ts}/{mode}_label_report.csv")
+        acc.to_csv(f"reports/Eval-{self.ts}/{mode}_accuracy.csv")
+        np.savetxt(f"reports/Eval-{self.ts}/{mode}_label_cm.txt", label_cm, fmt="%d")
+        f = open(f"reports/Eval-{self.ts}/{mode}_concept_cm.txt","w")
+        f.write("Per concept confusion matrix:\n\n{}\n".format(concept_cm))
+        f.close()
+        plots.class_distribution(all_label_preds,self.pth_cfg["data"]["training"],f"reports/Eval-{self.ts}")
+        
         print("Concept accuracy: ",concept_accuracy)
         print("Label accuracy: ",label_accuracy)
         end = time.time()
         print("Time spent: ",end-start)
+
 
 if __name__ == "__main__":
     p_map = {"pth_model_1":None,
@@ -205,5 +149,6 @@ if __name__ == "__main__":
                  pth_data_1=p_map["pth_data_1"], pth_data_2=p_map["pth_data_2"],
                  model_variant=p_map["model_variant"], layers=p_map["layers"])
     #e.evaluate_on_val()
-    e.evaluate_on(target="test")
+    #e.evaluate_on(target="training")
+    e.evaluate_on(target="training")
         

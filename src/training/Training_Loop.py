@@ -42,7 +42,7 @@ class Training_Loop:
         self.bsize = bsize
         self.bpdc = bpdc
         self.multi_label = multi_label
-		self.random_seed = random_seed
+        self.random_seed = random_seed
 
         self.early_stopping = early_stopping
         self.patience = patience
@@ -50,9 +50,9 @@ class Training_Loop:
 
         self.output_batches, self.output_epochs = pd.DataFrame({}),pd.DataFrame({})
         self.output_report, self.output_accuracy = pd.DataFrame({}),pd.DataFrame({})
-
+        self.output_per_label_accuracy = pd.DataFrame({})
     
-    def train(self, dataset, out_folder=""):
+    def train(self, ds_train, ds_val, out_folder=""):
         """
         Req.: A dataset is provided that the model can be trained on.
               The dataset shall provide a tuple (x,y) as sample where x is the model input and y is the target.
@@ -65,19 +65,6 @@ class Training_Loop:
         if self.model == None:
             print("Error: Model not configured")
             return
-
-        
-        
-        total_samples = len(dataset)
-        labels = [dataset[i][1][1] for i in range(len(dataset))]
-        idx = list(range(len(dataset)))
-
-        train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=0.2, self.random_seed, stratify=labels)
-        train_idx = [idx[i] for i in train_idx]
-        val_idx = [idx[i] for i in val_idx]
-
-        train_ds = Subset(dataset, train_idx)
-        val_ds = Subset(dataset, val_idx)
 
         Epoch,Batch,Train_Loss,Val_Loss = [],[],[],[]
         
@@ -93,9 +80,9 @@ class Training_Loop:
 
         instance.to(device)
 
-        train_loader = DataLoader(train_ds, shuffle=True, num_workers=max_workers, persistent_workers=True,
+        train_loader = DataLoader(ds_train, shuffle=True, num_workers=max_workers, persistent_workers=True,
                                   pin_memory = (device.type=="cuda"), batch_size=self.bsize)
-        val_loader = DataLoader(val_ds, shuffle=True, num_workers=max_workers, persistent_workers=False,
+        val_loader = DataLoader(ds_val, shuffle=True, num_workers=max_workers, persistent_workers=False,
                                 pin_memory=(device.type=="cuda"), batch_size=self.bsize)
         start = time.time()
 
@@ -173,15 +160,17 @@ class Training_Loop:
         self.output_epochs.to_csv(f"{target_folder}/Output_epochs.csv",index=False)
         self.output_report.to_csv(f"{target_folder}/Output_report.csv",index=False)
         self.output_accuracy.to_csv(f"{target_folder}/Output_accuracy.csv",index=False)
+        self.output_per_label_accuracy.to_csv(f"{target_folder}/Output_per_label_accuracy.csv", index=False)
 
         plots.epoch_loss(pd.read_csv(f"{target_folder}/Output_epochs.csv"),f"{target_folder}/Plots")
         plots.batch_loss(pd.read_csv(f"{target_folder}/Output_batches.csv"),self.bpdc, total_samples,f"{target_folder}/Plots")
         plots.report(pd.read_csv(f"{target_folder}/Output_report.csv"),f"{target_folder}/Plots")
         plots.epoch_accuracy(pd.read_csv(f"{target_folder}/Output_accuracy.csv"),f"{target_folder}/Plots")
+        plots.per_label_accuracy(pd.read_csv(f"{target_folder}/Output_per_label_accuracy.csv"), f"{target_folder}/Plots")
 
         checkpoint["last_model"] = instance.state_dict()
         checkpoint["last_optimizer"] = optimizer.state_dict()
-        torch.save(checkpoint,f"{target_folder}/{target_folder}.pth")
+        torch.save(checkpoint,f"{target_folder}/{out_folder}.pth")
 
         output_dict = {"output_batches":self.output_batches,"output_epochs":self.output_epochs,
                        "output_report":self.output_report,"output_accuracy":self.output_accuracy}
@@ -238,10 +227,11 @@ class Training_Loop:
                 all_targets.append(target)
         all_preds = np.concatenate(all_preds)
         all_targets = np.concatenate(all_targets)
-
+        
         metric_map = self.generate_metrics(all_preds, all_targets, epoch)
         self.output_report = pd.concat([self.output_report,metric_map["report"]], ignore_index=True)
         self.output_accuracy = pd.concat([self.output_accuracy,metric_map["accuracy"]], ignore_index=True)
+        self.output_per_label_accuracy = pd.concat([self.output_per_label_accuracy,metric_map["per_label_accuracy"]], ignore_index=True)
         
         return total_loss/total_samples
 
@@ -267,6 +257,11 @@ class Training_Loop:
         metric_map["report"] = report
         accuracy = metrics.accuracy_score(targets,preds,normalize=True)
         metric_map["accuracy"] = pd.DataFrame({"epoch":[epoch],"accuracy":[accuracy]})
+        label_cm = metrics.multilabel_confusion_matrix(targets, preds)
+        label_acc = {"epoch":[epoch]}
+        for i in range(len(label_cm)):
+            label_acc[str(i)] = [(label_cm[i][0][0]+label_cm[i][1][1])/(label_cm[i][0][0]+label_cm[i][0][1]+label_cm[i][1][0]+label_cm[i][1][1])]
+        metric_map["per_label_accuracy"] = pd.DataFrame(label_acc)
         return metric_map
 
     def set_model(self,model):

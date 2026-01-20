@@ -1,5 +1,5 @@
 stage_1:
-   epochs: 5
+   epochs: 20
    lr: 0.0001
    bsize: 16               #batchsize
    optimizer: "adam"

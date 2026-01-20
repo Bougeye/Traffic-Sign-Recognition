@@ -39,10 +39,10 @@ class GTSRBDataset(Dataset):
             self.samples = self._collect_from_test()
         else:
             raise ValueError("Wrong mode selected. Either pick 'training' or 'test'.")
-        print("Collecting concepts")
         # load concepts from CSV
+        print("Collecting concepts")
         self.class_to_concepts = self._load_concept_file(self.concept_csv)
-        print("Collected concepts")
+        print("Concepts collected")
 
     def _collect_from_training(self):
         samples = []
