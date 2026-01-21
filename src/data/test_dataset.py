@@ -7,13 +7,10 @@ from torchvision import transforms
 import pandas as pd
 
 class TestDataset(Dataset):
-    def __init__(self, dataset_config="config/dataset.yml", path_config="config/paths.yml", transform=None):
-        with open(dataset_config, "r") as f:
-            ds_cfg = yaml.safe_load(f)["dataset"]
-        with open(path_config, "r") as f:
-            pth_cfg = yaml.safe_load(f)["data"]
+    def __init__(self, ds_cfg, pth_cfg, transform=None):
+        ds_cfg = ds_cfg["dataset"]
+        pth_cfg = pth_cfg["data"]
 
-        
         self.root_dir = pth_cfg["test"]
         if transform is None:
             size = ds_cfg.get("image_size", 64)*ds_cfg["zoom_factor"]

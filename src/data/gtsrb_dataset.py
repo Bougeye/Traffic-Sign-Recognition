@@ -9,13 +9,9 @@ from torchvision import transforms
 import pandas as pd
 
 class GTSRBDataset(Dataset):
-    def __init__(self, dataset_config="config/dataset.yml", path_config="config/paths.yml", target="training", transform=None):
-        with open(dataset_config, "r") as f:
-            cfg = yaml.safe_load(f)
-        ds_cfg = cfg["dataset"]
-        with open(path_config, "r") as f:
-            cfg = yaml.safe_load(f)
-        pth_cfg = cfg["data"]
+    def __init__(self, ds_cfg, pth_cfg, target="training", transform=None):
+        ds_cfg = ds_cfg["dataset"]
+        pth_cfg = pth_cfg["data"]
 
         self.root_dir = pth_cfg[target]
         self.concept_csv = pth_cfg["concepts"]

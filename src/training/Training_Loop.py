@@ -7,7 +7,6 @@ import sklearn.metrics as metrics
 import os
 import pandas as pd
 import sys
-import yaml
 import time, datetime
 import random
 import math
@@ -24,7 +23,7 @@ import src.models.ENV2 as models
 
 class Training_Loop:
     
-    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False, random_seed=69):
+    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False):
         """
         Req.: The following list of parameters may be provided:
               #epochs: The amount of epochs the model goes through in training
@@ -37,12 +36,12 @@ class Training_Loop:
         Eff.: A training loop with the specified parameters is instanciated. 
         Res.: -
         """
+        random.seed(42)
         self.model = None
         self.epochs = epochs
         self.bsize = bsize
         self.bpdc = bpdc
         self.multi_label = multi_label
-        self.random_seed = random_seed
 
         self.early_stopping = early_stopping
         self.patience = patience
@@ -170,7 +169,10 @@ class Training_Loop:
 
         checkpoint["last_model"] = instance.state_dict()
         checkpoint["last_optimizer"] = optimizer.state_dict()
-        torch.save(checkpoint,f"{target_folder}/{out_folder}.pth")
+        if self.multi_label:
+            torch.save(checkpoint,f"{target_folder}/stage_1.pth")
+        else:
+            torch.save(checkpoint,f"{target_folder}/stage_2.pth")
 
         output_dict = {"output_batches":self.output_batches,"output_epochs":self.output_epochs,
                        "output_report":self.output_report,"output_accuracy":self.output_accuracy}
