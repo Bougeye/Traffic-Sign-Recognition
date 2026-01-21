@@ -20,28 +20,30 @@ class train:
         self.cbmmodel.experiment_training(model_variant=model_variant, random_seed=random_seed, epochs_stage1=epochs_stage1, epochs_stage2=epochs_stage2, early_stopping=early_stopping)
     
 if __name__ == "__main__":
-    with open("config/training.yml","r") as f:
+	
+	pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument("--trcfg", type=str, default="config/training.yml")
+    pre_parser.add_argument("--dscfg", type=str, default="config/dataset.yml")
+    pre_parser.add_argument("--pthcfg", type=str, default="config/paths.yml")
+
+    pre_args, remaining_args = pre_parser.parse_known_args()
+
+    with open(pre_args.trcfg, "r") as f:
         tr_cfg = yaml.safe_load(f)
-    with open("config/dataset.yml","r") as f:
+    with open(pre_args.dscfg, "r") as f:
         ds_cfg = yaml.safe_load(f)
-    parser = argparse.ArgumentParser()
+    with open(pre_args.pthcfg, "r") as f:
+        pth_cfg = yaml.safe_load(f)
+		
+    parser = argparse.ArgumentParser(parents=[pre_parser])
     parser.add_argument("--mv", type=str, help="EfficientNetV2 model variant", default=tr_cfg["stage_1"]["model_variant"])
-    parser.add_argument("--trcfg", type=str, help="Training config file location", default="config/training.yml")
-    parser.add_argument("--dscfg", type=str, help="Dataset config file location", default="config/dataset.yml")
-    parser.add_argument("--pthcfg", type=str, help="Path config file location", default="config/paths.yml")
-    parser.add_argument("--lrs1", type=int, help="Learning rate for concept classification model", default=tr_cfg["stage_1"]["lr"])
-    parser.add_argument("--lrs2", type=int, help="Learning rate for traffic sign recognition model", default=tr_cfg["stage_2"]["lr"])
+    parser.add_argument("--lrs1", type=float, help="Learning rate for concept classification model", default=tr_cfg["stage_1"]["lr"])
+    parser.add_argument("--lrs2", type=float, help="Learning rate for traffic sign recognition model", default=tr_cfg["stage_2"]["lr"])
     parser.add_argument("--rs", type=int, help="Seed for random number generators", default=tr_cfg["random_seed"])
     parser.add_argument("--eps1", type=int, help="Number of epochs for training of concept classification model", default=tr_cfg["stage_1"]["epochs"])
-    parser.add_argument("--eps2", type=int, help="Number of epoch sfor training of traffic sign recognition model", default=tr_cfg["stage_2"]["epochs"])
+    parser.add_argument("--eps2", type=int, help="Number of epochs for training of traffic sign recognition model", default=tr_cfg["stage_2"]["epochs"])
     parser.add_argument("--es", type=bool, help="Set if early stopping should be used in training", default=bool(tr_cfg["early_stopping"]))
-    args = parser.parse_args()
-    with open(args.trcfg, "r") as f:
-        tr_cfg = yaml.safe_load(f)
-    with open(args.dscfg, "r") as f:
-        ds_cfg = yaml.safe_load(f)
-    with open(args.pthcfg, "r") as f:
-        pth_cfg = yaml.safe_load(f)
+    args = parser.parse_args(remaining_args)
     x = train(tr_cfg, ds_cfg, pth_cfg, model_variant=args.mv, lr_stage1=args.lrs1, lr_stage2=args.lrs2) 
     x.experiment(model_variant=args.mv, random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
     #ds = x.forward_stage_1()
