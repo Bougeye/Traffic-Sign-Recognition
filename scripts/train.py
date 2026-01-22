@@ -20,7 +20,7 @@ class train:
         self.cbmmodel.experiment_training(model_variant=model_variant, random_seed=random_seed, epochs_stage1=epochs_stage1, epochs_stage2=epochs_stage2, early_stopping=early_stopping)
     
 if __name__ == "__main__":
-	
+    
     pre_parser = argparse.ArgumentParser(add_help=False)
     pre_parser.add_argument("--trcfg", type=str, default="config/training.yml")
     pre_parser.add_argument("--dscfg", type=str, default="config/dataset.yml")
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         ds_cfg = yaml.safe_load(f)
     with open(pre_args.pthcfg, "r") as f:
         pth_cfg = yaml.safe_load(f)
-		
+        
     parser = argparse.ArgumentParser(parents=[pre_parser])
     parser.add_argument("--mv", type=str, help="EfficientNetV2 model variant", default=tr_cfg["stage_1"]["model_variant"])
     parser.add_argument("--lrs1", type=float, help="Learning rate for concept classification model", default=tr_cfg["stage_1"]["lr"])

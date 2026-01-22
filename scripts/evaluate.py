@@ -6,6 +6,7 @@ import yaml
 import torch
 import time
 import datetime
+import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -24,7 +25,7 @@ import src.utils.reports as reports
 
 class evaluate:
     def __init__(self, pth_model_1=None, pth_model_2=None, mode="best_model",
-                 pth_data_1=None, pth_data_2=None, model_variant="M", layers=1):
+                 pth_data=None, model_variant="M", layers=1):
         with open("config/training.yml", "r") as f:
             self.tr_cfg = yaml.safe_load(f)
         with open("config/dataset.yml", "r") as f:
@@ -42,7 +43,11 @@ class evaluate:
         if pth_model_1 is not None:
             print("Fetching stage 1 from specified file path...")
             try:
-                self.instance_1 = torch.load(pth_model_1, map_location=self.device)
+                #self.instance_1 = torch.load(pth_model_1, map_location=self.device)
+                tmp = torch.load(pth_model_1, map_location=self.device)
+                self.instance_1.load_state_dict(tmp[mode])
+                self.instance_1.to(self.device)
+                self.instance_1.eval()
             except:
                 raise ValueError("Could not find model path for stage 1."
                                  "Please make sure model path relative to project root is correct.")
@@ -55,7 +60,11 @@ class evaluate:
         if pth_model_2 is not None:
             print("Fetching stage 2 from specified file path...")
             try:
-                self.instance_2 = torch.load(pth_model_2, map_location=self.device)
+                #self.instance_2 = torch.load(pth_model_2, map_location=self.device)
+                tmp = torch.load(pth_model_2, map_location=self.device)
+                self.instance_2.load_state_dict(tmp[mode])
+                self.instance_2.to(self.device)
+                self.instance_2.eval()
             except:
                 raise ValueError("Could not find model path for stage 2."
                                  "Please make sure model path relative to project root is correct.")
@@ -68,7 +77,7 @@ class evaluate:
         self.max_workers = 4+4*(self.device.type != "cuda")
         self.bsize = self.tr_cfg["stage_1"]["bsize"]
 
-    def evaluate_on(self, target="training"):
+    def evaluate_on(self, target="training", datapath=None, random_seed=42):
         start = time.time()
         mode = target
         if mode == "training":
@@ -76,10 +85,11 @@ class evaluate:
         print(f"Intializing {mode} split...")
         dataset = GTSRBDataset(self.ds_cfg,
                                self.pth_cfg,
-                               target=target)
+                               target=target,
+                               datapath=datapath)
         if target=="training":
             labels = [dataset[i][1][1] for i in range(len(dataset))]
-            _, idx = train_test_split(list(range(len(dataset))), test_size=0.2, random_state=69, stratify=labels)
+            _, idx = train_test_split(list(range(len(dataset))), test_size=0.2, random_state=random_seed, stratify=labels)
             dataset = Subset(dataset, idx)
         loader = DataLoader(dataset, num_workers=self.max_workers, persistent_workers=True,
                                 pin_memory=(self.device.type=="cuda"), batch_size=self.bsize)
@@ -136,19 +146,32 @@ class evaluate:
         print("Time spent: ",end-start)
 
 
-if __name__ == "__main__":
-    p_map = {"pth_model_1":None,
-             "pth_model_2":None,
+if __name__ == "__main__":        
+	
+    with open("config/training.yml", "r") as f:
+        tr_cfg = yaml.safe_load(f)
+	
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mpth1", type=str, help="Path to Checkpoint of Stage1 Model.", default=None)
+    parser.add_argument("--mpth2", type=str, help="Path to Checkpoint of Stage2 Model.", default=None)
+    parser.add_argument("--datapth", type=str, help="Path to Dataset.", default=None)
+    parser.add_argument("--target", type=str, help="Evaluate on Training or Test Set.", default="test")
+    parser.add_argument("--rs", type=str, help="Seed for random number generators", default=tr_cfg["random_seed"])
+    args = parser.parse_args()
+    
+    
+    p_map = {"pth_model_1":args.mpth1,
+             "pth_model_2":args.mpth2,
              "mode":"best_model",
-             "pth_data_1":None,
-             "pth_data_2":None,
+             "pth_data":args.datapth,
+             "target":args.target,
+             "random_seed":args.rs,
              "model_variant":"S",
              "layers":3}
-    
     e = evaluate(pth_model_1=p_map["pth_model_1"], pth_model_2=p_map["pth_model_2"], mode=p_map["mode"],
-                 pth_data_1=p_map["pth_data_1"], pth_data_2=p_map["pth_data_2"],
+                 pth_data=p_map["pth_data"],
                  model_variant=p_map["model_variant"], layers=p_map["layers"])
     #e.evaluate_on_val()
     #e.evaluate_on(target="training")
-    e.evaluate_on(target="test")
+    e.evaluate_on(target=p_map["target"], datapath=p_map["pth_data"], random_seed=p_map["random_seed"])
         

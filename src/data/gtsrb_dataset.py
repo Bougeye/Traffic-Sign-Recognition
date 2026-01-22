@@ -9,12 +9,15 @@ from torchvision import transforms
 import pandas as pd
 
 class GTSRBDataset(Dataset):
-    def __init__(self, ds_cfg, pth_cfg, target="training", transform=None):
+    def __init__(self, ds_cfg, pth_cfg, target="training", transform=None, datapath=None):
         ds_cfg = ds_cfg["dataset"]
         pth_cfg = pth_cfg["data"]
-
-        self.root_dir = pth_cfg[target]
         self.concept_csv = pth_cfg["concepts"]
+
+        if datapath is None:
+            self.root_dir = pth_cfg[target]
+        else: 
+            self.root_dir = datapath
 
         if transform is None:
             size = ds_cfg.get("image_size", 64)*ds_cfg["zoom_factor"]
