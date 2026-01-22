@@ -21,7 +21,7 @@ class train:
     
 if __name__ == "__main__":
 	
-	pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser = argparse.ArgumentParser(add_help=False)
     pre_parser.add_argument("--trcfg", type=str, default="config/training.yml")
     pre_parser.add_argument("--dscfg", type=str, default="config/dataset.yml")
     pre_parser.add_argument("--pthcfg", type=str, default="config/paths.yml")

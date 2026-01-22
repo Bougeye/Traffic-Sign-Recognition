@@ -20,6 +20,7 @@ from src.data.test_dataset import TestDataset
 from src.models.ENV2 import ENV2 as Stage_1
 from src.models.LabelModel import LabelModel as Stage_2
 import src.utils.plots as plots
+import src.utils.reports as reports
 
 class evaluate:
     def __init__(self, pth_model_1=None, pth_model_2=None, mode="best_model",
@@ -73,8 +74,8 @@ class evaluate:
         if mode == "training":
             mode = "val"
         print(f"Intializing {mode} split...")
-        dataset = GTSRBDataset(dataset_config="config/dataset.yml",
-                               path_config="config/paths.yml",
+        dataset = GTSRBDataset(self.ds_cfg,
+                               self.pth_cfg,
                                target=target)
         if target=="training":
             labels = [dataset[i][1][1] for i in range(len(dataset))]
@@ -106,7 +107,6 @@ class evaluate:
                 all_label_preds.append(label_pred)
                 all_concept_targets.append(concept_target)
                 all_label_targets.append(label_target)
-        print(len(wrongs))
         all_concept_preds = np.concatenate(all_concept_preds)
         all_label_preds = np.concatenate(all_label_preds)
         all_concept_targets = np.concatenate(all_concept_targets)
@@ -129,7 +129,7 @@ class evaluate:
         f.write("Per concept confusion matrix:\n\n{}\n".format(concept_cm))
         f.close()
         plots.class_distribution(all_label_preds,self.pth_cfg["data"]["training"],f"reports/Eval-{self.ts}")
-        
+        reports.misclassification_report(wrongs,f"reports/Eval-{self.ts}/misclassification.pdf")
         print("Concept accuracy: ",concept_accuracy)
         print("Label accuracy: ",label_accuracy)
         end = time.time()
@@ -150,5 +150,5 @@ if __name__ == "__main__":
                  model_variant=p_map["model_variant"], layers=p_map["layers"])
     #e.evaluate_on_val()
     #e.evaluate_on(target="training")
-    e.evaluate_on(target="training")
+    e.evaluate_on(target="test")
         
