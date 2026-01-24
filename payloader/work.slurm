@@ -61,6 +61,7 @@ required = [
     "pandas",
     "sklearn.model_selection",
     "seaborn",
+    "argparse",
 ]
 
 missing = []

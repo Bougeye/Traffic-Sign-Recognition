@@ -1,0 +1,452 @@
+Requirement already satisfied: pip in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.3)
+Requirement already satisfied: wheel in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (0.45.1)
+Collecting wheel
+  Downloading wheel-0.46.3-py3-none-any.whl.metadata (2.4 kB)
+Requirement already satisfied: setuptools in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (80.10.1)
+Requirement already satisfied: packaging in /vol/fob-vol1/mi23/ziglowsa/venvs/payload_venv/lib/python3.10/site-packages (25.0)
+Collecting packaging
+  Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+Downloading wheel-0.46.3-py3-none-any.whl (30 kB)
+Downloading packaging-26.0-py3-none-any.whl (74 kB)
+Installing collected packages: packaging, wheel
+  Attempting uninstall: packaging
+    Found existing installation: packaging 25.0
+    Uninstalling packaging-25.0:
+      Successfully uninstalled packaging-25.0
+  Attempting uninstall: wheel
+    Found existing installation: wheel 0.45.1
+    Uninstalling wheel-0.45.1:
+      Successfully uninstalled wheel-0.45.1
+
+Successfully installed packaging-26.0 wheel-0.46.3
+All required imports already available in venv.
+Import check passed (including torchvision).
+=== ENV ===
+HOSTNAME: gruenau2
+PARTITION: gpu
+CUDA_VISIBLE_DEVICES: 0
+PWD: /vol/fob-vol1/mi23/ziglowsa/Payload
+numpy: 2.2.6
+torch: 2.4.1+cu121 cuda: 12.1 is_available: True
+torchvision: 0.19.1+cu121
+nvidia-smi -L: GPU 0: Quadro RTX 6000 (UUID: GPU-31e29be8-c653-eba9-6d77-e9fd72722d64)
+Collecting samples
+Collecting concepts
+Concepts collected
+device: cuda
+Epoch: 1 of 20
+[batch 100] samples: 1600, Training Loss: 0.1187
+   Time since start: 0:00:53.613997
+[batch 200] samples: 3200, Training Loss: 0.0810
+   Time since start: 0:00:59.829185
+[batch 300] samples: 4800, Training Loss: 0.0762
+   Time since start: 0:01:05.913740
+[batch 400] samples: 6400, Training Loss: 0.0400
+   Time since start: 0:01:11.987818
+--m-Epoch 1 done.
+   Training Loss: 0.1086
+   Validation Loss: 0.0203
+Epoch: 2 of 20
+[batch 100] samples: 1600, Training Loss: 0.0241
+   Time since start: 0:02:07.921529
+[batch 200] samples: 3200, Training Loss: 0.0110
+   Time since start: 0:02:14.123569
+[batch 300] samples: 4800, Training Loss: 0.0129
+   Time since start: 0:02:20.292078
+[batch 400] samples: 6400, Training Loss: 0.0112
+   Time since start: 0:02:26.524801
+--m-Epoch 2 done.
+   Training Loss: 0.0144
+   Validation Loss: 0.0053
+Epoch: 3 of 20
+[batch 100] samples: 1600, Training Loss: 0.0050
+   Time since start: 0:03:22.492418
+[batch 200] samples: 3200, Training Loss: 0.0049
+   Time since start: 0:03:28.776107
+[batch 300] samples: 4800, Training Loss: 0.0037
+   Time since start: 0:03:35.159907
+[batch 400] samples: 6400, Training Loss: 0.0025
+   Time since start: 0:03:41.568162
+--m-Epoch 3 done.
+   Training Loss: 0.0048
+   Validation Loss: 0.0020
+Epoch: 4 of 20
+[batch 100] samples: 1600, Training Loss: 0.0023
+   Time since start: 0:04:36.650720
+[batch 200] samples: 3200, Training Loss: 0.0019
+   Time since start: 0:04:43.281990
+[batch 300] samples: 4800, Training Loss: 0.0027
+   Time since start: 0:04:49.960848
+[batch 400] samples: 6400, Training Loss: 0.0017
+   Time since start: 0:04:56.447390
+--m-Epoch 4 done.
+   Training Loss: 0.0029
+   Validation Loss: 0.0016
+Epoch: 5 of 20
+[batch 100] samples: 1600, Training Loss: 0.0035
+   Time since start: 0:05:50.973324
+[batch 200] samples: 3200, Training Loss: 0.0040
+   Time since start: 0:05:57.255009
+[batch 300] samples: 4800, Training Loss: 0.0013
+   Time since start: 0:06:03.543202
+[batch 400] samples: 6400, Training Loss: 0.0012
+   Time since start: 0:06:09.807161
+--m-Epoch 5 done.
+   Training Loss: 0.0028
+   Validation Loss: 0.0018
+patience decreased: patience is now  4
+Epoch: 6 of 20
+[batch 100] samples: 1600, Training Loss: 0.0008
+   Time since start: 0:07:07.220420
+[batch 200] samples: 3200, Training Loss: 0.0008
+   Time since start: 0:07:13.785066
+[batch 300] samples: 4800, Training Loss: 0.0011
+   Time since start: 0:07:20.271171
+[batch 400] samples: 6400, Training Loss: 0.0010
+   Time since start: 0:07:26.726627
+--m-Epoch 6 done.
+   Training Loss: 0.0021
+   Validation Loss: 0.0012
+Epoch: 7 of 20
+[batch 100] samples: 1600, Training Loss: 0.0007
+   Time since start: 0:08:23.335301
+[batch 200] samples: 3200, Training Loss: 0.0005
+   Time since start: 0:08:29.827471
+[batch 300] samples: 4800, Training Loss: 0.0005
+   Time since start: 0:08:36.315899
+[batch 400] samples: 6400, Training Loss: 0.0028
+   Time since start: 0:08:43.056767
+--m-Epoch 7 done.
+   Training Loss: 0.0014
+   Validation Loss: 0.0012
+patience decreased: patience is now  4
+Epoch: 8 of 20
+[batch 100] samples: 1600, Training Loss: 0.0006
+   Time since start: 0:09:38.933735
+[batch 200] samples: 3200, Training Loss: 0.0004
+   Time since start: 0:09:45.649974
+[batch 300] samples: 4800, Training Loss: 0.0004
+   Time since start: 0:09:52.090226
+[batch 400] samples: 6400, Training Loss: 0.0003
+   Time since start: 0:09:58.560429
+--m-Epoch 8 done.
+   Training Loss: 0.0017
+   Validation Loss: 0.0026
+patience decreased: patience is now  3
+Epoch: 9 of 20
+[batch 100] samples: 1600, Training Loss: 0.0009
+   Time since start: 0:10:55.025958
+[batch 200] samples: 3200, Training Loss: 0.0002
+   Time since start: 0:11:01.468120
+[batch 300] samples: 4800, Training Loss: 0.0004
+   Time since start: 0:11:07.778419
+[batch 400] samples: 6400, Training Loss: 0.0003
+   Time since start: 0:11:14.085942
+--m-Epoch 9 done.
+   Training Loss: 0.0012
+   Validation Loss: 0.0008
+Epoch: 10 of 20
+[batch 100] samples: 1600, Training Loss: 0.0003
+   Time since start: 0:12:09.823204
+[batch 200] samples: 3200, Training Loss: 0.0003
+   Time since start: 0:12:16.472736
+[batch 300] samples: 4800, Training Loss: 0.0002
+   Time since start: 0:12:22.820598
+[batch 400] samples: 6400, Training Loss: 0.0004
+   Time since start: 0:12:29.534487
+--m-Epoch 10 done.
+   Training Loss: 0.0012
+   Validation Loss: 0.0006
+Epoch: 11 of 20
+[batch 100] samples: 1600, Training Loss: 0.0012
+   Time since start: 0:13:25.559391
+[batch 200] samples: 3200, Training Loss: 0.0033
+   Time since start: 0:13:31.842994
+[batch 300] samples: 4800, Training Loss: 0.0005
+   Time since start: 0:13:38.278418
+[batch 400] samples: 6400, Training Loss: 0.0003
+   Time since start: 0:13:44.564278
+--m-Epoch 11 done.
+   Training Loss: 0.0010
+   Validation Loss: 0.0008
+patience decreased: patience is now  4
+Epoch: 12 of 20
+[batch 100] samples: 1600, Training Loss: 0.0008
+   Time since start: 0:14:42.231448
+[batch 200] samples: 3200, Training Loss: 0.0003
+   Time since start: 0:14:48.451297
+[batch 300] samples: 4800, Training Loss: 0.0003
+   Time since start: 0:14:54.994737
+[batch 400] samples: 6400, Training Loss: 0.0002
+   Time since start: 0:15:01.342334
+--m-Epoch 12 done.
+   Training Loss: 0.0011
+   Validation Loss: 0.0007
+patience decreased: patience is now  3
+Epoch: 13 of 20
+[batch 100] samples: 1600, Training Loss: 0.0003
+   Time since start: 0:15:57.327034
+[batch 200] samples: 3200, Training Loss: 0.0058
+   Time since start: 0:16:04.153304
+[batch 300] samples: 4800, Training Loss: 0.0207
+   Time since start: 0:16:10.807910
+[batch 400] samples: 6400, Training Loss: 0.0004
+   Time since start: 0:16:17.305459
+--m-Epoch 13 done.
+   Training Loss: 0.0014
+   Validation Loss: 0.0038
+patience decreased: patience is now  2
+Epoch: 14 of 20
+[batch 100] samples: 1600, Training Loss: 0.0002
+   Time since start: 0:17:11.822059
+[batch 200] samples: 3200, Training Loss: 0.0001
+   Time since start: 0:17:18.283846
+[batch 300] samples: 4800, Training Loss: 0.0001
+   Time since start: 0:17:24.734632
+[batch 400] samples: 6400, Training Loss: 0.0024
+   Time since start: 0:17:31.239318
+--m-Epoch 14 done.
+   Training Loss: 0.0005
+   Validation Loss: 0.0020
+patience decreased: patience is now  1
+Epoch: 15 of 20
+[batch 100] samples: 1600, Training Loss: 0.0005
+   Time since start: 0:18:28.007483
+[batch 200] samples: 3200, Training Loss: 0.0001
+   Time since start: 0:18:34.287340
+[batch 300] samples: 4800, Training Loss: 0.0001
+   Time since start: 0:18:40.565144
+[batch 400] samples: 6400, Training Loss: 0.0001
+   Time since start: 0:18:46.807107
+--m-Epoch 15 done.
+   Training Loss: 0.0003
+   Validation Loss: 0.0007
+patience decreased: patience is now  0
+Stopping early
+     precision    recall  f1-score   support  epoch  class
+0     1.000000  0.999915  0.999958   23664.0      1      0
+1     1.000000  0.999339  0.999669    1512.0      1      1
+2     0.999557  1.000000  0.999778    4511.0      1      2
+3     0.999405  1.000000  0.999702    1680.0      1      3
+4     0.999566  0.999566  0.999566    2304.0      1      4
+..         ...       ...       ...       ...    ...    ...
+700   1.000000  1.000000  1.000000     288.0     15     42
+701   0.999379  0.999126  0.999252  130365.0     15      0
+702   0.998301  0.997736  0.998012  130365.0     15      1
+703   0.999381  0.999126  0.999252  130365.0     15      2
+704   0.999411  0.999091  0.999197  130365.0     15      3
+
+[705 rows x 6 columns]
+device: cuda
+Epoch: 1 of 20
+[batch 20] samples: 1280, Training Loss: 3.5993
+   Time since start: 0:00:03.988420
+[batch 40] samples: 2560, Training Loss: 3.2802
+   Time since start: 0:00:04.033859
+[batch 60] samples: 3840, Training Loss: 2.6440
+   Time since start: 0:00:04.080375
+[batch 80] samples: 5120, Training Loss: 2.3111
+   Time since start: 0:00:04.126606
+[batch 100] samples: 6400, Training Loss: 1.7734
+   Time since start: 0:00:04.171463
+[batch 120] samples: 7680, Training Loss: 1.3271
+   Time since start: 0:00:04.212296
+--m-Epoch 1 done.
+   Training Loss: 2.6487
+   Validation Loss: 1.3279
+Epoch: 2 of 20
+[batch 20] samples: 1280, Training Loss: 1.1839
+   Time since start: 0:00:07.558834
+[batch 40] samples: 2560, Training Loss: 0.9823
+   Time since start: 0:00:07.604169
+[batch 60] samples: 3840, Training Loss: 0.6183
+   Time since start: 0:00:07.650635
+[batch 80] samples: 5120, Training Loss: 0.5718
+   Time since start: 0:00:07.696009
+[batch 100] samples: 6400, Training Loss: 0.3368
+   Time since start: 0:00:07.742959
+[batch 120] samples: 7680, Training Loss: 0.3067
+   Time since start: 0:00:07.785198
+--m-Epoch 2 done.
+   Training Loss: 0.6823
+   Validation Loss: 0.2710
+Epoch: 3 of 20
+[batch 20] samples: 1280, Training Loss: 0.1918
+   Time since start: 0:00:08.708028
+[batch 40] samples: 2560, Training Loss: 0.1137
+   Time since start: 0:00:08.753504
+[batch 60] samples: 3840, Training Loss: 0.1380
+   Time since start: 0:00:08.799999
+[batch 80] samples: 5120, Training Loss: 0.1471
+   Time since start: 0:00:08.845201
+[batch 100] samples: 6400, Training Loss: 0.0758
+   Time since start: 0:00:08.891407
+[batch 120] samples: 7680, Training Loss: 0.0641
+   Time since start: 0:00:08.934324
+--m-Epoch 3 done.
+   Training Loss: 0.1282
+   Validation Loss: 0.0690
+Epoch: 4 of 20
+[batch 20] samples: 1280, Training Loss: 0.0406
+   Time since start: 0:00:09.873649
+[batch 40] samples: 2560, Training Loss: 0.0384
+   Time since start: 0:00:09.920173
+[batch 60] samples: 3840, Training Loss: 0.0222
+   Time since start: 0:00:09.966444
+[batch 80] samples: 5120, Training Loss: 0.0235
+   Time since start: 0:00:10.011897
+[batch 100] samples: 6400, Training Loss: 0.0192
+   Time since start: 0:00:10.058662
+[batch 120] samples: 7680, Training Loss: 0.0222
+   Time since start: 0:00:10.099912
+--m-Epoch 4 done.
+   Training Loss: 0.0327
+   Validation Loss: 0.0374
+Epoch: 5 of 20
+[batch 20] samples: 1280, Training Loss: 0.0123
+   Time since start: 0:00:11.048745
+[batch 40] samples: 2560, Training Loss: 0.0102
+   Time since start: 0:00:11.095168
+[batch 60] samples: 3840, Training Loss: 0.0109
+   Time since start: 0:00:11.141892
+[batch 80] samples: 5120, Training Loss: 0.0111
+   Time since start: 0:00:11.187643
+[batch 100] samples: 6400, Training Loss: 0.0123
+   Time since start: 0:00:11.233713
+[batch 120] samples: 7680, Training Loss: 0.0087
+   Time since start: 0:00:11.276602
+--m-Epoch 5 done.
+   Training Loss: 0.0148
+   Validation Loss: 0.0307
+Epoch: 6 of 20
+[batch 20] samples: 1280, Training Loss: 0.0097
+   Time since start: 0:00:12.218586
+[batch 40] samples: 2560, Training Loss: 0.0063
+   Time since start: 0:00:12.266115
+[batch 60] samples: 3840, Training Loss: 0.0051
+   Time since start: 0:00:12.312385
+[batch 80] samples: 5120, Training Loss: 0.0073
+   Time since start: 0:00:12.358341
+[batch 100] samples: 6400, Training Loss: 0.0057
+   Time since start: 0:00:12.403693
+[batch 120] samples: 7680, Training Loss: 0.0067
+   Time since start: 0:00:12.445802
+--m-Epoch 6 done.
+   Training Loss: 0.0091
+   Validation Loss: 0.0280
+Epoch: 7 of 20
+[batch 20] samples: 1280, Training Loss: 0.0080
+   Time since start: 0:00:13.386793
+[batch 40] samples: 2560, Training Loss: 0.0049
+   Time since start: 0:00:13.433651
+[batch 60] samples: 3840, Training Loss: 0.0049
+   Time since start: 0:00:13.480853
+[batch 80] samples: 5120, Training Loss: 0.0039
+   Time since start: 0:00:13.527667
+[batch 100] samples: 6400, Training Loss: 0.0037
+   Time since start: 0:00:13.574216
+[batch 120] samples: 7680, Training Loss: 0.0028
+   Time since start: 0:00:13.616282
+--m-Epoch 7 done.
+   Training Loss: 0.0066
+   Validation Loss: 0.0271
+Epoch: 8 of 20
+[batch 20] samples: 1280, Training Loss: 0.0035
+   Time since start: 0:00:14.549696
+[batch 40] samples: 2560, Training Loss: 0.0034
+   Time since start: 0:00:14.595251
+[batch 60] samples: 3840, Training Loss: 0.0050
+   Time since start: 0:00:14.641309
+[batch 80] samples: 5120, Training Loss: 0.0040
+   Time since start: 0:00:14.686992
+[batch 100] samples: 6400, Training Loss: 0.0028
+   Time since start: 0:00:14.733950
+[batch 120] samples: 7680, Training Loss: 0.0021
+   Time since start: 0:00:14.775980
+--m-Epoch 8 done.
+   Training Loss: 0.0051
+   Validation Loss: 0.0267
+patience decreased: patience is now  4
+Epoch: 9 of 20
+[batch 20] samples: 1280, Training Loss: 0.0027
+   Time since start: 0:00:15.719591
+[batch 40] samples: 2560, Training Loss: 0.0035
+   Time since start: 0:00:15.765656
+[batch 60] samples: 3840, Training Loss: 0.0023
+   Time since start: 0:00:15.812062
+[batch 80] samples: 5120, Training Loss: 0.0031
+   Time since start: 0:00:15.859597
+[batch 100] samples: 6400, Training Loss: 0.0022
+   Time since start: 0:00:15.904398
+[batch 120] samples: 7680, Training Loss: 0.0021
+   Time since start: 0:00:15.946934
+--m-Epoch 9 done.
+   Training Loss: 0.0042
+   Validation Loss: 0.0268
+patience decreased: patience is now  3
+Epoch: 10 of 20
+[batch 20] samples: 1280, Training Loss: 0.0016
+   Time since start: 0:00:16.894511
+[batch 40] samples: 2560, Training Loss: 0.0017
+   Time since start: 0:00:16.940315
+[batch 60] samples: 3840, Training Loss: 0.0019
+   Time since start: 0:00:16.986018
+[batch 80] samples: 5120, Training Loss: 0.0012
+   Time since start: 0:00:17.032516
+[batch 100] samples: 6400, Training Loss: 0.0015
+   Time since start: 0:00:17.079113
+[batch 120] samples: 7680, Training Loss: 0.0034
+   Time since start: 0:00:17.120684
+--m-Epoch 10 done.
+   Training Loss: 0.0036
+   Validation Loss: 0.0270
+patience decreased: patience is now  2
+Epoch: 11 of 20
+[batch 20] samples: 1280, Training Loss: 0.0019
+   Time since start: 0:00:18.058178
+[batch 40] samples: 2560, Training Loss: 0.0012
+   Time since start: 0:00:18.103256
+[batch 60] samples: 3840, Training Loss: 0.0011
+   Time since start: 0:00:18.149397
+[batch 80] samples: 5120, Training Loss: 0.0020
+   Time since start: 0:00:18.195710
+[batch 100] samples: 6400, Training Loss: 0.0013
+   Time since start: 0:00:18.241701
+[batch 120] samples: 7680, Training Loss: 0.0010
+   Time since start: 0:00:18.282246
+--m-Epoch 11 done.
+   Training Loss: 0.0032
+   Validation Loss: 0.0272
+patience decreased: patience is now  1
+Epoch: 12 of 20
+[batch 20] samples: 1280, Training Loss: 0.0013
+   Time since start: 0:00:19.214958
+[batch 40] samples: 2560, Training Loss: 0.0013
+   Time since start: 0:00:19.261625
+[batch 60] samples: 3840, Training Loss: 0.0014
+   Time since start: 0:00:19.308209
+[batch 80] samples: 5120, Training Loss: 0.0009
+   Time since start: 0:00:19.352907
+[batch 100] samples: 6400, Training Loss: 0.0010
+   Time since start: 0:00:19.399340
+[batch 120] samples: 7680, Training Loss: 0.0010
+   Time since start: 0:00:19.440312
+--m-Epoch 12 done.
+   Training Loss: 0.0028
+   Validation Loss: 0.0275
+patience decreased: patience is now  0
+Stopping early
+     precision    recall  f1-score       support  epoch  class
+0     0.000000  0.000000  0.000000    168.000000      1      0
+1     1.000000  0.999437  0.999718   1776.000000      1      1
+2     0.996674  0.998889  0.997780   1800.000000      1      2
+3     1.000000  0.998227  0.999113   1128.000000      1      3
+4     0.999369  0.999369  0.999369   1584.000000      1      4
+..         ...       ...       ...           ...    ...    ...
+547   0.989691  1.000000  0.994819    192.000000     12     41
+548   0.994819  1.000000  0.997403    192.000000     12     42
+549   0.997705  0.997705  0.997705      0.997705     12      0
+550   0.997391  0.996349  0.996855  31367.000000     12      1
+551   0.997715  0.997705  0.997702  31367.000000     12      2
+
+[552 rows x 6 columns]

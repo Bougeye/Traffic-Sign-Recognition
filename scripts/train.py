@@ -44,8 +44,9 @@ if __name__ == "__main__":
     parser.add_argument("--eps2", type=int, help="Number of epochs for training of traffic sign recognition model", default=tr_cfg["stage_2"]["epochs"])
     parser.add_argument("--es", type=bool, help="Set if early stopping should be used in training", default=bool(tr_cfg["early_stopping"]))
     args = parser.parse_args(remaining_args)
-    x = train(tr_cfg, ds_cfg, pth_cfg, model_variant=args.mv, lr_stage1=args.lrs1, lr_stage2=args.lrs2) 
-    x.experiment(model_variant=args.mv, random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
+    x = train(tr_cfg, ds_cfg, pth_cfg, model_variant=args.mv, lr_stage1=args.lrs1, lr_stage2=args.lrs2)
+    x.train_model(random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
+    #x.experiment(model_variant=args.mv, random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
     #ds = x.forward_stage_1()
     #x.read_dataset(ds)
     

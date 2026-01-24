@@ -1,6 +1,7 @@
 from torch.utils.data import TensorDataset, DataLoader, Subset
 import sklearn.metrics as metrics
 import os
+import pandas as pd
 import sys
 import yaml
 import torch
@@ -126,20 +127,25 @@ class evaluate:
         concept_accuracy = metrics.accuracy_score(all_concept_targets, all_concept_preds, normalize=True)
         label_accuracy = metrics.accuracy_score(all_label_targets, all_label_preds, normalize=True)
         acc = pd.DataFrame({"ConceptAcc":[concept_accuracy],"LabelAcc":[label_accuracy]})
-        concept_cm = metrics.multilabel_confusion_matrix(all_label_targets,all_label_preds)
+        concept_cm = metrics.multilabel_confusion_matrix(all_concept_targets,all_concept_preds)
         label_cm = metrics.confusion_matrix(all_label_targets,all_label_preds)
         
         os.makedirs(f"reports/Eval-{self.ts}", exist_ok=True)
         
-        concept_report.to_csv(f"reports/Eval-{self.ts}/{mode}_concept_report.csv")
-        label_report.to_csv(f"reports/Eval-{self.ts}/{mode}_label_report.csv")
+        #concept_report.to_csv(f"reports/Eval-{self.ts}/{mode}_concept_report.csv")
+        #label_report.to_csv(f"reports/Eval-{self.ts}/{mode}_label_report.csv")
         acc.to_csv(f"reports/Eval-{self.ts}/{mode}_accuracy.csv")
         np.savetxt(f"reports/Eval-{self.ts}/{mode}_label_cm.txt", label_cm, fmt="%d")
         f = open(f"reports/Eval-{self.ts}/{mode}_concept_cm.txt","w")
         f.write("Per concept confusion matrix:\n\n{}\n".format(concept_cm))
         f.close()
         plots.class_distribution(all_label_preds,self.pth_cfg["data"]["training"],f"reports/Eval-{self.ts}")
-        reports.misclassification_report(wrongs,f"reports/Eval-{self.ts}/misclassification.pdf")
+        label_names = pd.read_csv(os.path.join(self.pth_cfg["data"]["root"],"class_map.csv"))
+        concept_names = pd.read_csv(os.path.join(self.pth_cfg["data"]["root"],"concept_map.csv"))
+        reports.misclassification_report(wrongs, concept_names, label_names, f"reports/Eval-{self.ts}/misclassification.pdf")
+        reports.metrics_report(concept_report, concept_names, f"reports/Eval-{self.ts}/concept_report.pdf")
+        reports.metrics_report(label_report, label_names, f"reports/Eval-{self.ts}/label_report.pdf")
+        reports.label_cm_report(self.pth_cfg["data"]["training"],label_cm, label_names, f"reports/Eval-{self.ts}/label_cm.pdf")
         print("Concept accuracy: ",concept_accuracy)
         print("Label accuracy: ",label_accuracy)
         end = time.time()

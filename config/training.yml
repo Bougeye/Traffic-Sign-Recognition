@@ -1,13 +1,13 @@
 stage_1:
    epochs: 20
-   lr: 0.0001
+   lr: 0.00001
    bsize: 16               #batchsize
    optimizer: "adam"
    folds: 5
    bpdc: 100                #batches per data collection to collect metrics throughout an epoch
    patience: 5
    min_delta: 0.025
-   model_variant: "S"
+   model_variant: "M"
 
 stage_2:
    epochs: 20
@@ -20,5 +20,5 @@ stage_2:
    min_delta: 0.025
    layers: 3
 
-random_seed: 42
+random_seed: 69
 early_stopping: 1

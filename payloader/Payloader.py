@@ -36,6 +36,7 @@ def payloader(key_file="key", make_zip=True, remove_zip=True):
             pass
         shutil.make_archive(load_path, "zip", load_path)
         print("--- Built Payload zip-file")
+    print("--- Connecting to remote site")
     c = Connection(host=server,
                    user=user,
                    connect_kwargs={"key_filename":os.path.join(loader_path,key_file)})
@@ -85,11 +86,12 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     
     time = datetime.now()
     ts = str(time)[:10]+"_"+time.strftime("%H:%M:%S").replace(":","-")
-    
+    print("--- Connecting to remote site")
     c = Connection(host=server,
                    user=user,
                    connect_kwargs={"key_filename":os.path.join(loader_path,key_file)})
     tpath = "~/Payload"
+    print("--- Fetching results from remote site")
     with c.cd(tpath):
         c.run(f"mv Results {ts}", in_stream=False)
         c.run(f"zip -q -r {ts}.zip {ts}", in_stream=False)
@@ -104,5 +106,5 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     print("--- Copied results to experiments")
     print("### TASK FINISHED ###")
     
-    
-payloader(make_zip=False, remove_zip=False)
+get_results()   
+#payloader(make_zip=False, remove_zip=False)

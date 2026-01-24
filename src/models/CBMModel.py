@@ -27,7 +27,7 @@ class CBMModel:
         self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["stage_2"]["lr"], optimizer=self.tr_cfg["stage_2"]["optimizer"],
                                                        layers=3,hidden_dim=128,hidden_dim2=64)
 
-    def train(self, random_seed=42, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
+    def train(self, random_seed=69, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
         ds_train, ds_val = self._setup_splits(random_seed)
         self.train_stage_1(ds_train, ds_val, epochs_stage1, early_stopping, "stage_1")
         ds_train = self.forward_stage_1(ds_train)
@@ -49,7 +49,7 @@ class CBMModel:
         ds_val = Subset(dataset_1, val_idx)
         return ds_train, ds_val 
 
-    def train_stage_1(self, ds_val, ds_train, epochs_stage1, early_stopping, out_folder):
+    def train_stage_1(self, ds_train, ds_val, epochs_stage1, early_stopping, out_folder):
         train_1 = Training_Loop(epochs=epochs_stage1, bsize=self.tr_cfg["stage_1"]["bsize"],
                                 bpdc=self.tr_cfg["stage_1"]["bpdc"], patience=self.tr_cfg["stage_1"]["patience"],
                                 min_delta=self.tr_cfg["stage_1"]["min_delta"],early_stopping=early_stopping,
@@ -57,7 +57,7 @@ class CBMModel:
         train_1.set_model(self.model_stage_1)
         train_1.train(ds_train, ds_val, out_folder=out_folder)
 
-    def train_stage_2(self, ds_val, ds_train, epochs_stage2, early_stopping, out_folder):
+    def train_stage_2(self, ds_train,ds_val, epochs_stage2, early_stopping, out_folder):
         train_2 = Training_Loop(epochs=epochs_stage2, bsize=self.tr_cfg["stage_2"]["bsize"],
                                 bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
                                 min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=early_stopping,
@@ -110,14 +110,14 @@ class CBMModel:
         train_1.train(ds_train, ds_val, out_folder="stage_1")
         ds_train = self.forward_stage_1(ds_train)
         ds_val = self.forward_stage_1(ds_val)
-        for learning_rate in [0.01,0.001,0.0001,0.00001]:
+        for learning_rate in [0.001,0.0001,0.00001]:
             for layer in [1,2,3]:
                 for dim in [32,64,128,256]:
-                    model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["stage_2"]["lr"], optimizer=self.tr_cfg["stage_2"]["optimizer"],
+                    model_stage_2 = stage_2_models.LabelModel(lr=learning_rate, optimizer=self.tr_cfg["stage_2"]["optimizer"],
                                                               layers=layer,hidden_dim=dim,hidden_dim2=int(dim/2))
                     train_2 = Training_Loop(epochs=epochs_stage2, bsize=self.tr_cfg["stage_2"]["bsize"],
                                         bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
                                         min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=early_stopping,
                                         multi_label=False)
-                    train_2.set_model(self.model_stage_2)
+                    train_2.set_model(model_stage_2)
                     train_2.train(ds_train, ds_val, out_folder=f"stage_2/lr-{learning_rate}/layers-{layer}/dim-{dim}")

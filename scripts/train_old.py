@@ -24,6 +24,8 @@ class train:
             self.tr_cfg = yaml.safe_load(f)
         with open("config/dataset.yml", "r") as f:
             self.ds_cfg = yaml.safe_load(f)
+        with open("config/paths.yml", "r") as f:
+            self.pth_cfg = yaml.safe_load(f)
         self.model_stage_1 = stage_1_models.ENV2(model_variant=model_variant, lr=self.tr_cfg["stage_1"]["lr"], optimizer=self.tr_cfg["stage_1"]["optimizer"])
         self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["stage_2"]["lr"], optimizer=self.tr_cfg["stage_2"]["optimizer"],
                                                        layers=3,hidden_dim=128,hidden_dim2=64)
@@ -43,8 +45,8 @@ class train:
         self.train_1.set_model(self.model_stage_1)
         self.train_2.set_model(self.model_stage_2)
         
-        dataset_1 = GTSRBDataset(dataset_config="config/dataset.yml",
-                                 path_config="config/paths.yml")
+        dataset_1 = GTSRBDataset(self.ds_cfg,
+                                 self.pth_cfg)
         
         total_samples = len(dataset_1)
         labels = [dataset_1[i][1][1] for i in range(len(dataset_1))]
@@ -98,8 +100,8 @@ class train:
 
     def experiment_training(self, model_variant="M", early_stopping=True):
         ###Learning rate optimization
-        gtsrb_ds = GTSRBDataset(dataset_config="config/dataset.yml",
-                                path_config="config/paths.yml")
+        gtsrb_ds = GTSRBDataset(self.ds_cfg,
+                                self.pth_cfg)
         for learning_rate in [0.01,0.001,0.0001,0.00001]:
             model_stage_1 = stage_1_models.ENV2(model_variant,learning_rate, self.tr_cfg["stage_1"]["optimizer"])
             train_1 = Training_Loop(epochs=self.tr_cfg["stage_1"]["epochs"], bsize=self.tr_cfg["stage_1"]["bsize"],
