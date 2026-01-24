@@ -7,7 +7,7 @@ stage_1:
    bpdc: 100                #batches per data collection to collect metrics throughout an epoch
    patience: 5
    min_delta: 0.025
-   model_variant: "M"
+   model_variant: "S"
 
 stage_2:
    epochs: 20
@@ -19,6 +19,7 @@ stage_2:
    patience: 5
    min_delta: 0.025
    layers: 3
+   hidden_dim: 128
 
 random_seed: 69
 early_stopping: 1

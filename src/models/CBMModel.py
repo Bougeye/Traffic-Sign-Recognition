@@ -25,7 +25,8 @@ class CBMModel:
         self.pth_cfg = pth_cfg
         self.model_stage_1 = stage_1_models.ENV2(model_variant=model_variant, lr=self.tr_cfg["stage_1"]["lr"], optimizer=self.tr_cfg["stage_1"]["optimizer"])
         self.model_stage_2 = stage_2_models.LabelModel(lr=self.tr_cfg["stage_2"]["lr"], optimizer=self.tr_cfg["stage_2"]["optimizer"],
-                                                       layers=3,hidden_dim=128,hidden_dim2=64)
+                                                       layers=self.tr_cfg["stage_2"]["layers"],hidden_dim=self.tr_cfg["stage_2"]["hidden_dim"],
+                                                       hidden_dim2=int(self.tr_cfg["stage_2"]["hidden_dim"]/2))
 
     def train(self, random_seed=69, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
         ds_train, ds_val = self._setup_splits(random_seed)

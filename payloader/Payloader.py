@@ -106,5 +106,5 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     print("--- Copied results to experiments")
     print("### TASK FINISHED ###")
     
-get_results()   
-#payloader(make_zip=False, remove_zip=False)
+#get_results()   
+payloader(make_zip=False, remove_zip=False)

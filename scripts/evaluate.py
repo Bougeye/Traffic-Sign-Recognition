@@ -25,7 +25,7 @@ import src.utils.plots as plots
 import src.utils.reports as reports
 
 class evaluate:
-    def __init__(self, pth_model_1=None, pth_model_2=None, mode="best_model",
+    def __init__(self, pth_model_1=None, pth_model_2=None, last=False,
                  pth_data=None, model_variant="M", layers=1):
         with open("config/training.yml", "r") as f:
             self.tr_cfg = yaml.safe_load(f)
@@ -33,10 +33,14 @@ class evaluate:
             self.ds_cfg = yaml.safe_load(f)
         with open("config/paths.yml","r") as f:
             self.pth_cfg = yaml.safe_load(f)
+        if last==False:
+            mode="best_model"
+        else:
+            mode="last_model"
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.stage_1 = Stage_1(model_variant=model_variant)
-        self.stage_2 = Stage_2(layers=3,hidden_dim=128,hidden_dim2=64)
+        self.stage_2 = Stage_2(layers=self.tr_cfg["stage_2"]["layers"],hidden_dim=self.tr_cfg["stage_2"]["hidden_dim"],hidden_dim2=int(self.tr_cfg["stage_2"]["hidden_dim"]/2))
         self.instance_1 = self.stage_1.get_instance()
         self.instance_2 = self.stage_2.get_instance()
         self.ts = str(datetime.datetime.now())[:10]+"_"+time.strftime("%H:%M:%S").replace(":","-")
@@ -163,21 +167,12 @@ if __name__ == "__main__":
     parser.add_argument("--datapth", type=str, help="Path to Dataset.", default=None)
     parser.add_argument("--target", type=str, help="Evaluate on Training or Test Set.", default="test")
     parser.add_argument("--rs", type=str, help="Seed for random number generators", default=tr_cfg["random_seed"])
+    parser.add_argument("--last", type=bool, help="Grab last model (True) or best model (False)", default=False)
     args = parser.parse_args()
     
-    
-    p_map = {"pth_model_1":args.mpth1,
-             "pth_model_2":args.mpth2,
-             "mode":"best_model",
-             "pth_data":args.datapth,
-             "target":args.target,
-             "random_seed":args.rs,
-             "model_variant":"S",
-             "layers":3}
-    e = evaluate(pth_model_1=p_map["pth_model_1"], pth_model_2=p_map["pth_model_2"], mode=p_map["mode"],
-                 pth_data=p_map["pth_data"],
-                 model_variant=p_map["model_variant"], layers=p_map["layers"])
+    e = evaluate(pth_model_1=args.mpth1, pth_model_2=args.mpth2, last=args.last, pth_data=args.datapth,
+                 model_variant=tr_cfg["stage_1"]["model_variant"], layers=tr_cfg["stage_2"]["layers"])
     #e.evaluate_on_val()
     #e.evaluate_on(target="training")
-    e.evaluate_on(target=p_map["target"], datapath=p_map["pth_data"], random_seed=p_map["random_seed"])
-        
+    e.evaluate_on(target=args.target, datapath=args.datapth, random_seed=args.rs)
+    
