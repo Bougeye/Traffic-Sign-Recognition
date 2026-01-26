@@ -6,6 +6,7 @@ import shutil
 from datetime import datetime
 import yaml
 import shutil
+import argparse
 
 def payloader(key_file="key", make_zip=True, remove_zip=True):
     print("### STARTING TASK - PAYLOADER ###")    
@@ -105,6 +106,17 @@ def get_results(key_file="key", make_zip=True, remove_zip=True):
     shutil.copytree(os.path.join(loader_path,f"Results/{ts}"),os.path.join(exp_path,ts))
     print("--- Copied results to experiments")
     print("### TASK FINISHED ###")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--t", type=str, help="Must be 'results' to fetch results or 'payloader' for payloader", default="payloader")
+    parser.add_argument("--mz", type=bool, help="(Re-)build zip file", default=False)
+    parser.add_argument("--rz", type=bool, help="Remove zip after completion", default=False)
     
-#get_results()   
-payloader(make_zip=False, remove_zip=False)
+    args = parser.parse_args()
+    if args.t == "payloader":
+        payloader(make_zip=args.mz, remove_zip=args.rz)
+    elif args.t == "results":
+        get_results()
+    else:
+        print("Value error on task")

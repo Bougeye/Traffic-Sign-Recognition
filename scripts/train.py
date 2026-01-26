@@ -2,6 +2,7 @@ import os
 import argparse
 import yaml
 import sys
+import shutil
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
@@ -46,6 +47,9 @@ if __name__ == "__main__":
     args = parser.parse_args(remaining_args)
     x = train(tr_cfg, ds_cfg, pth_cfg, model_variant=args.mv, lr_stage1=args.lrs1, lr_stage2=args.lrs2)
     x.train_model(random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
+    os.makedirs("Results/configs/", exist_ok=True)
+    for e in ["training.yml","dataset.yml","paths.yml"]:
+        shutil.copy(os.path.join("config",e),os.path.join("Results",e))
     #x.experiment(model_variant=args.mv, random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
     #ds = x.forward_stage_1()
     #x.read_dataset(ds)

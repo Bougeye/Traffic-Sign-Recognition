@@ -1,0 +1,5 @@
+dataset:
+  image_size: 64
+  number_of_concepts: 43
+  training_samples: 39209
+  zoom_factor: 2

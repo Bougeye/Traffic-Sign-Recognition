@@ -112,4 +112,17 @@ def class_distribution(preds,train_pth,out_folder):
     #fig.text(0.05,-0.05,f"Total error assuming stratified train/test split: {total_dist:.8f}")
     fig.savefig(os.path.join(out_folder,"class_distribution.png"))
     plt.close(g.figure)
-    
+
+def level_metrics(df,out_folder):
+    os.makedirs(out_folder, exist_ok=True)
+    for e in ["Precision","Recall","f1-Score"]:
+        g = sns.catplot(y="Name",
+                        x=e,
+                        height=10,
+                        aspect=0.8,
+                        data=df,
+                        kind="bar")
+        xmin, xmax = df[e].min(), df[e].max()
+        g.set(xlim=(xmin, xmax))
+        fig =g.fig
+        fig.savefig(os.path.join(out_folder,f"{e}_distribution.png"))

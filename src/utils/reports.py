@@ -10,6 +10,7 @@ import torch
 from PIL import Image as PILImage
 import io
 import os
+import pandas as pd
 
 def tensor_to_png(t):
     t = t.detach().cpu()
@@ -215,6 +216,12 @@ def metrics_report(report_dict, names_map, out_path, title="Concept Report"):
     contents.append(Paragraph(f"<b>{title}</b>", styles["Title"]))
     contents.append(Spacer(1, 0.2*cm))
     data = [["Name","Precision","Recall","f1-Score","Support"]]
+    
+    df = pd.DataFrame({})
+    df["Name"] = names_map["name"]
+    df["Precision"] = list(report_dict.iloc[:43]["precision"])
+    df["Recall"] = list(report_dict.iloc[:43]["recall"])
+    df["f1-Score"] = list(report_dict.iloc[:43]["f1-score"])
     for i in range(43):
         row = report_dict.iloc[i]
         data.append([names_map.iloc[i]["name"],round(row["precision"],6),round(row["recall"],6),round(row["f1-score"],6),int(row["support"])])
@@ -267,6 +274,7 @@ def metrics_report(report_dict, names_map, out_path, title="Concept Report"):
     tbl.setStyle(TableStyle(style_cmds))
     contents.append(tbl)
     doc.build(contents)
+    return df
 
 def cm_card(label,TP,FP,FN,TN,card_width):
     styles = getSampleStyleSheet()

@@ -11,6 +11,7 @@ import time, datetime
 import random
 import math
 import numpy as np
+import copy
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if ROOT not in sys.path:
@@ -89,8 +90,8 @@ class Training_Loop:
         best_val_loss = np.inf
 
         checkpoint = {"epoch":0,
-                      "best_model":instance.state_dict(),
-                      "best_optimizer":optimizer.state_dict(),
+                      "best_model":copy.deepcopy(instance.state_dict()),
+                      "best_optimizer":copy.deepcopy(optimizer.state_dict()),
                       "val_loss":val_loss}
 
         print("device:",device)
@@ -141,8 +142,8 @@ class Training_Loop:
                         print(f"patience decreased: patience is now  {self.patience}")
                     else:
                         checkpoint = {"epoch":epoch,
-                                      "best_model":instance.state_dict(),
-                                      "best_optimizer":optimizer.state_dict(),
+                                      "best_model":copy.deepcopy(instance.state_dict()),
+                                      "best_optimizer":copy.deepcopy(optimizer.state_dict()),
                                       "val_loss":val_loss}
                         self.patience = min(self.patience+1, 5)
                         best_val_loss = val_loss
@@ -167,16 +168,15 @@ class Training_Loop:
         plots.epoch_accuracy(pd.read_csv(f"{target_folder}/Output_accuracy.csv"),f"{target_folder}/Plots")
         plots.per_label_accuracy(pd.read_csv(f"{target_folder}/Output_per_label_accuracy.csv"), f"{target_folder}/Plots")
 
-        checkpoint["last_model"] = instance.state_dict()
-        checkpoint["last_optimizer"] = optimizer.state_dict()
+        checkpoint["last_model"] = copy.deepcopy(instance.state_dict())
+        checkpoint["last_optimizer"] = copy.deepcopy(optimizer.state_dict())
         if self.multi_label:
             torch.save(checkpoint,f"{target_folder}/stage_1.pth")
         else:
             torch.save(checkpoint,f"{target_folder}/stage_2.pth")
 
-        output_dict = {"output_batches":self.output_batches,"output_epochs":self.output_epochs,
-                       "output_report":self.output_report,"output_accuracy":self.output_accuracy}
-        return output_dict
+        
+        return checkpoint
 
     
     def validate(self, epoch, instance, device, loss_fn, val_loader, 

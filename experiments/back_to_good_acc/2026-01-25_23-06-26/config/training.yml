@@ -1,0 +1,25 @@
+stage_1:
+   epochs: 20
+   lr: 0.00001
+   bsize: 16               #batchsize
+   optimizer: "adam"
+   folds: 5
+   bpdc: 25                #batches per data collection to collect metrics throughout an epoch
+   patience: 5
+   min_delta: 0.05
+   model_variant: "M"
+
+stage_2:
+   epochs: 40
+   lr: 0.001
+   bsize: 64
+   optimizer: "adam"
+   folds: 5
+   bpdc: 20
+   patience: 5
+   min_delta: 0.05
+   layers: 3
+   hidden_dim: 128
+
+random_seed: 69
+early_stopping: 1
