@@ -18,7 +18,6 @@ if ROOT not in sys.path:
 
 from src.data.gtsrb_dataset import GTSRBDataset
 from src.data.concepts_dataset import ConceptsDataset
-from src.data.test_dataset import TestDataset
 from src.models.ENV2 import ENV2 as Stage_1
 from src.models.LabelModel import LabelModel as Stage_2
 import src.utils.plots as plots

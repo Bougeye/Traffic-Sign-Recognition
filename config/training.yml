@@ -1,7 +1,7 @@
 stage_1:
    epochs: 20
    lr: 0.0001
-   bsize: 32               #batchsize
+   bsize: 16               #batchsize
    optimizer: "adam"
    folds: 5
    bpdc: 25                #batches per data collection to collect metrics throughout an epoch

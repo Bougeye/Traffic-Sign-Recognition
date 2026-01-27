@@ -9,7 +9,7 @@ import yaml
 from torch.utils.data import DataLoader
 
 class LabelModel():
-    def __init__(self, lr=0.01, optimizer="adam", layers=1, hidden_dim=1, hidden_dim2=1):
+    def __init__(self, lr=0.01, optimizer="adam", layers=3, hidden_dim=1, hidden_dim2=1):
         
         self.countLayers = layers
         
@@ -64,4 +64,4 @@ class LabelModel():
         return self.model
 
     def get_model(self) -> str:
-        return f"Model: {self.base_model} ({self.layers} layers)"
+        return f"Model: {self.base_model} ({self.countLayers} layers)"

@@ -17,7 +17,7 @@ class ENV2:
              through yml or set by the class.
         Res: -
         """
-        self.base_model = "EffcientNetV2"
+        self.base_model = "EfficientNetV2"
         self.variant_map = {
             "S": lambda:models.efficientnet_v2_s(weights=models.EfficientNet_V2_S_Weights.DEFAULT),
             "M": lambda:models.efficientnet_v2_m(weights=models.EfficientNet_V2_M_Weights.DEFAULT),

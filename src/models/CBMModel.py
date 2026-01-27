@@ -102,9 +102,9 @@ class CBMModel:
         loader = DataLoader(dataset)
         for i,(xb,yb) in enumerate(loader):
             print(xb,yb)
+            train_2.train(ds_train, ds_val, out_folder=f"stage_2/lr-{learning_rate}/layers-{layer}/dim-{dim}")
 
     def experiment_training(self, model_variant="S", random_seed=42, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
-        ###Learning rate optimization
         gtsrb_ds = GTSRBDataset(self.ds_cfg, self.pth_cfg)
         ds_train, ds_val = self._setup_splits(random_seed)
         train_1 = Training_Loop(epochs=epochs_stage1, bsize=self.tr_cfg["stage_1"]["bsize"],
@@ -118,11 +118,15 @@ class CBMModel:
         for learning_rate in [0.001,0.0001,0.00001]:
             for layer in [1,2,3]:
                 for dim in [32,64,128,256]:
-                    model_stage_2 = stage_2_models.LabelModel(lr=learning_rate, optimizer=self.tr_cfg["stage_2"]["optimizer"],
-                                                              layers=layer,hidden_dim=dim,hidden_dim2=int(dim/2))
-                    train_2 = Training_Loop(epochs=epochs_stage2, bsize=self.tr_cfg["stage_2"]["bsize"],
-                                        bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
-                                        min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=early_stopping,
-                                        multi_label=False)
-                    train_2.set_model(model_stage_2)
-                    train_2.train(ds_train, ds_val, out_folder=f"stage_2/lr-{learning_rate}/layers-{layer}/dim-{dim}")
+                    for optimizer in["sgd", "adam"]:
+                        model_stage_2 = stage_2_models.LabelModel(lr=learning_rate, optimizer=optimizer,
+                                                                  layers=layer,hidden_dim=dim,hidden_dim2=int(dim/2))
+                        train_2 = Training_Loop(epochs=epochs_stage2, bsize=self.tr_cfg["stage_2"]["bsize"],
+                                            bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
+                                            min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=early_stopping,
+                                            multi_label=False)
+                        train_2.set_model(model_stage_2)
+                        train_2.train(ds_train, ds_val, out_folder=f"stage_2/lr-{learning_rate}/layers-{layer}/dim-{dim}")
+
+
+    
