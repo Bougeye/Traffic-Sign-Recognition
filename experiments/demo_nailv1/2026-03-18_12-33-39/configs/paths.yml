@@ -1,0 +1,19 @@
+config: "config/"
+data:
+   GTSRB: "data/GTSRB/"
+   test: "data/GTSRB/Final_Test/Images/"
+   training: "data/GTSRB/Final_Training/Images/"
+   concepts: "data/GTSRB/concepts_per_class.csv"
+   root: "data/GTSRB/"
+reports:
+   EDA: "reports/eda/"
+scripts: "scripts/"
+src:
+   data: "src/data/"
+   models: "src/models/"
+   training: "src/training/"
+   utils: "src/utils/"
+tests: "tests/"
+experiments: "experiments/"
+payloader: "payloader/"
+registry: "registry/"
