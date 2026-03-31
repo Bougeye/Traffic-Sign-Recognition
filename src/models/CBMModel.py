@@ -45,16 +45,16 @@ class CBMModel:
 
     def train(self, random_seed=69, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
         ds_train, ds_val = self._setup_splits(random_seed)
-        self.train_stage_1(ds_train, ds_val, epochs_stage1, early_stopping, "stage_1")
+        self.train_stage_1(ds_train, ds_val, epochs_stage1, early_stopping, "stage_1", random_seed)
         ds_train = self.forward_stage_1(ds_train)
         ds_val = self.forward_stage_1(ds_val)
-        self.train_stage_2(ds_train, ds_val, epochs_stage2, early_stopping, "stage_2")
+        self.train_stage_2(ds_train, ds_val, epochs_stage2, early_stopping, "stage_2", random_seed)
 
-    def train_stage_1(self, ds_train, ds_val, epochs_stage1, early_stopping, out_folder):
+    def train_stage_1(self, ds_train, ds_val, epochs_stage1, early_stopping, out_folder, random_seed):
         train_1 = Training_Loop(epochs=epochs_stage1, bsize=self.tr_cfg["stage_1"]["bsize"],
                                 bpdc=self.tr_cfg["stage_1"]["bpdc"], patience=self.tr_cfg["stage_1"]["patience"],
                                 min_delta=self.tr_cfg["stage_1"]["min_delta"],early_stopping=early_stopping,
-                                multi_label=True)
+                                multi_label=True,random_seed=random_seed)
         train_1.set_model(self.model_stage_1)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         checkpoint = train_1.train(ds_train, ds_val, out_folder=out_folder)
@@ -62,11 +62,11 @@ class CBMModel:
         ###CRUCIAL
         self.model_stage_1.get_instance().load_state_dict(checkpoint["best_model"])
 
-    def train_stage_2(self, ds_train, ds_val, epochs_stage2, early_stopping, out_folder):
+    def train_stage_2(self, ds_train, ds_val, epochs_stage2, early_stopping, out_folder, random_seed):
         train_2 = Training_Loop(epochs=epochs_stage2, bsize=self.tr_cfg["stage_2"]["bsize"],
                                 bpdc=self.tr_cfg["stage_2"]["bpdc"], patience=self.tr_cfg["stage_2"]["patience"],
                                 min_delta=self.tr_cfg["stage_2"]["min_delta"],early_stopping=early_stopping,
-                                multi_label=False)
+                                multi_label=False,random_seed=random_seed)
         train_2.set_model(self.model_stage_2)
         train_2.train(ds_train, ds_val, out_folder=out_folder)
 

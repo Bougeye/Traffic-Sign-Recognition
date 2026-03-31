@@ -49,7 +49,7 @@ class GTSRBDataset(Dataset):
             folder_path = os.path.join(self.root_dir, folder)
             if not os.path.isdir(folder_path):
                 continue
-            for fname in os.listdir(folder_path):
+            for fname in sorted(os.listdir(folder_path)):
                 if fname.lower().endswith((".ppm", ".jpg", ".png")):
                     samples.append((
                         os.path.join(folder_path, fname),

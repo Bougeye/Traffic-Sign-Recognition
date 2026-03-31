@@ -24,7 +24,7 @@ import src.models.ENV2 as models
 
 class Training_Loop:
     
-    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False):
+    def __init__(self, epochs=15, bsize=16, bpdc=20, patience=5, min_delta=0.05, early_stopping=True, multi_label=False, random_seed=69):
         """
         Req.: The following list of parameters may be provided:
               #epochs: The amount of epochs the model goes through in training
@@ -37,7 +37,7 @@ class Training_Loop:
         Eff.: A training loop with the specified parameters is instanciated. 
         Res.: -
         """
-        random.seed(42)
+        self._random_seed = random_seed
         self.model = None
         self.epochs = epochs
         self.bsize = bsize
@@ -80,8 +80,11 @@ class Training_Loop:
 
         instance.to(device)
 
+        g = torch.Generator()
+        g.manual_seed(self._random_seed)
+
         train_loader = DataLoader(ds_train, shuffle=True, num_workers=max_workers, persistent_workers=True,
-                                  pin_memory = (device.type=="cuda"), batch_size=self.bsize)
+                                  pin_memory = (device.type=="cuda"), batch_size=self.bsize, generator=g)
         val_loader = DataLoader(ds_val, shuffle=True, num_workers=max_workers, persistent_workers=False,
                                 pin_memory=(device.type=="cuda"), batch_size=self.bsize)
         start = time.time()

@@ -3,6 +3,9 @@ import argparse
 import yaml
 import sys
 import shutil
+import random
+import numpy as np
+import torch
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
@@ -19,6 +22,21 @@ class train:
 
     def experiment(self, model_variant="S", random_seed=42, epochs_stage1=20, epochs_stage2=20, early_stopping=True):
         self.cbmmodel.experiment_training(model_variant=model_variant, random_seed=random_seed, epochs_stage1=epochs_stage1, epochs_stage2=epochs_stage2, early_stopping=early_stopping)
+
+def seed_everything(seed: int = 69):
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
+    random.seed(seed)
+    np.random.seed(seed)
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True)
     
 if __name__ == "__main__":
     
@@ -45,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--eps2", type=int, help="Number of epochs for training of traffic sign recognition model", default=tr_cfg["stage_2"]["epochs"])
     parser.add_argument("--es", type=bool, help="Set if early stopping should be used in training", default=bool(tr_cfg["early_stopping"]))
     args = parser.parse_args(remaining_args)
+    seed_everything(args.rs)
     x = train(tr_cfg, ds_cfg, pth_cfg, model_variant=args.mv, lr_stage1=args.lrs1, lr_stage2=args.lrs2)
     x.train_model(random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
     #x.experiment(model_variant=args.mv, random_seed=args.rs, epochs_stage1=args.eps1, epochs_stage2=args.eps2, early_stopping=args.es)
